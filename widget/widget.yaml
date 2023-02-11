@@ -59,7 +59,7 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Feb 11, 2023, 3:32:25 PM
+timestamp: Feb 11, 2023, 4:17:52 PM
 component: f7-card
 config:
   stylesheet: >
@@ -168,7 +168,7 @@ slots:
     - component: f7-icon
       config:
         f7: drop_fill
-        color: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'green' : 'gray'" 
+        color: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'green' : 'gray'"
         size: 25px
         style:
           left: 5px
@@ -339,7 +339,7 @@ slots:
                                   border-radius: var(--f7-card-expandable-border-radius)
                                   box-shadow: var(--f7-card-expandable-box-shadow)
                                   width: auto
-                                title: "= 'Fan Speed ('+items[props.fan+props.speed].state+')'" 
+                                title: = 'Fan Speed ('+items[props.fan+props.speed].state+')'
                                 unit: ""
                                 vertical: true
                                 visible: true
@@ -358,8 +358,8 @@ slots:
                 - component: oh-button
                   config:
                     action: command
-                    actionCommand: 50
-                    actionItem: =props.dimmerItem
+                    actionCommand: timer1
+                    actionItem: = props.fan+props.command
                     class:
                       - my_button
                     color: "= items[props.fan+props.timer].state>0 ? 'green' : 'gray'"
