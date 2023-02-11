@@ -27,16 +27,16 @@ Features
 	* If it happens to be the low/medium/high (+-5), this button will show green
 	* Any other value will make the setup/wrench button green
 5. It had a humidity icon
-	* Below 40 or above 60 (recommended values for health) it will be gray, else green
-	* Pressing it will show a popup with 24 hours graph of humidity
+	* Between 40 and 60% (recommended values for health) it will be gray, else green
 	
 It new at the moment, so work in progress. Expect changes. 
-	* Next addition will be a rule to automaticly contro fan when showering or at day/night.
-	* The current setup uses the web api with a refresh of one minute. Command is sent immidiatelly but the widget is delayed on updating. Maybe use mqtt? Or it's not worth it ...
+	* Next addition will be a rule to automaticly control fan when showering or at day/night.
+	* A popup graph with 24 hours humidity and/or speed
+	* The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating. Maybe use mqtt? Or it's not worth it ...
 
 ## Preperation
-1. Have an openhab installation ;-)
-2. Own an itho central ventilation unit ;-)
+1. Have an openhab installation :grin:
+2. Own an itho central ventilation unit :grin:
 3. Buy and install the Itho CVE RFT WiFi add-on, see [documentation](https://github.com/arjenhiemstra/ithowifi)
 	* To use all features, also buy/install the 866 mhz radio controller and humidity sensor
 	* If you own it, add your remote(s) to the addon (not the itho box).
@@ -80,6 +80,21 @@ When opening the current_speed it can't be controlled with the default GUI. You 
 	* If you chose other names for the items, you can also select the seperate items
 	* set low, medium and high according to the values in the itho addon system setup
 
+##Usage
+1. Add the widget 'widget_fan' to your dashboard or page. Remember it's intended for tiled dashboards (so small)
+2. Set the props of the widget
+	* Option 1 : Only set the equipment items (don't change seperate items)
+	* Option 2 : Only set (all!) the seperate items (don't set equipment item)
+	* Set values for low/medium/high speeds (same as in GUI of add-on)
+3. You're done
+	* Press L, M or H button to change speed to low, medium or high setting
+	* Press hourglass to temporally increase speed (accoding to high setting and timer1)
+	* Press wrench to set another speed (slider will show)
+	* Icons will change according to settings, remember. The fan will respond immediatelly, the GUI with a 30 second delay (according to thing update frequency)
+	
+	
+	
+
 ## Code
 The code is pretty standard. Things you might find interesting for changes
 1. It uses the the web api at api.html (documentation  in the webpages of the add-on itself)
@@ -87,14 +102,19 @@ The code is pretty standard. Things you might find interesting for changes
 	* api.html?get=currentspeed (get speed in plaintext)
 	* api.html?command=low/medium/high/timer1 (set speed to fixed value or timer)
 	* api.html?speed=0-254 (set speed at given value)
-2. It uses the the web api at queue.html (undocumented api to retrieve timer actions in json format)
-3. Range openHab accepts for speed can be changed in metadata of the current_speed item
-4. Since the settings for low/medium/high can't be retrieved from the api (as far as I know) the widget takes them as input parameters
-5. Most behaviour is 'programmed' in the widget
-6. The widget uses a trick to allow both the equipment as seperate items using the default values and concatenating them in the formulas
+	* api.html?get=queue (undocumented api, returns json with timers)
+2. Range openHab accepts for speed can be changed in metadata of the current_speed item
+3. Since the settings for low/medium/high can't be retrieved from the api (as far as I know) the widget takes them as input parameters
+4. Most behaviour is 'programmed' in the widget
+5. The widget uses a trick to allow both the equipment as seperate items using the default values and concatenating them in the formulas
 	* Like items[props.fan+props.speed].state
 	* If the equipment 'fan' is given it adds the default item names 'fan' + '_current_speed'
 	* If the items are given it adds '' + 'fan_current_speed'
 	* Of cource, if both are supplied this trick won't work
-7. If you're lazy, add your low/medium/high speed as a default. I used mine :)
+6. Embedded popovers in a widgets are a bit strange
+	* Add a popoverOpen to the caller, create a unique name. Start with a "."!
+	* Add a slot with a f7-popover in the calling item
+	* Give it a class with the unique name, but without the first "." (and if present replace the other point by a space)!
+	* Now they should connect/work. Always save before testing, openHAB will leave the widgetscreen when misconfigured.
+7. If you're lazy, add your low/medium/high speed as a default. I used mine :smiley:
 	
