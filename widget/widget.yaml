@@ -1,0 +1,371 @@
+uid: widget_fan
+tags: []
+props:
+  parameters:
+    - context: item
+      default: ""
+      description: Fan group
+      label: Fan group
+      name: fan
+      required: false
+      type: TEXT
+    - context: item
+      default: _current_speed
+      description: Item with speed
+      label: Fan speed
+      name: speed
+      required: false
+      type: TEXT
+    - context: item
+      default: _timer_time
+      description: Item with timer
+      label: timer
+      name: timer
+      required: false
+      type: TEXT
+    - context: item
+      default: _humidity
+      description: Item with humidity
+      label: humidity
+      name: humidity
+      required: false
+      type: TEXT
+    - context: item
+      default: _command
+      description: Item to send commands
+      label: item command
+      name: command
+      required: false
+      type: TEXT
+    - context: number
+      default: "25"
+      description: low setting
+      label: low setting
+      name: low
+      required: true
+      type: TEXT
+    - context: number
+      default: "80"
+      description: medium setting
+      label: medium setting
+      name: medium
+      required: true
+      type: TEXT
+    - context: number
+      default: "160"
+      description: high setting
+      label: high setting
+      name: high
+      required: true
+      type: TEXT
+  parameterGroups: []
+timestamp: Feb 11, 2023, 3:32:25 PM
+component: f7-card
+config:
+  stylesheet: >
+    .my_button {
+      height: 20px;
+      width: 26px;
+      padding: 1px 0px 0px 0px;
+      margin: 0px 0px 0px 0px;
+      insets: 0px 0px 0px 0px;
+      line-height: 16px;
+      font-size: 14px; 
+    }
+slots:
+  default:
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: = items[props.fan+props.speed].state<=30
+        style:
+          background-image: url(/static/fan-off.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: =items[props.fan+props.speed].state>30 && items[props.fan+props.speed].state<=70
+        style:
+          background-image: url(/static/fan-on-0.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: =items[props.fan+props.speed].state>70 && items[props.fan+props.speed].state<=110
+        style:
+          background-image: url(/static/fan-on-1.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: =items[props.fan+props.speed].state>110 && items[props.fan+props.speed].state<=150
+        style:
+          background-image: url(/static/fan-on-2.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: = items[props.fan+props.speed].state>150 && items[props.fan+props.speed].state<=190
+        style:
+          background-image: url(/static/fan-on-3.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: = items[props.fan+props.speed].state>190 && items[props.fan+props.speed].state<=230
+        style:
+          background-image: url(/static/fan-on-4.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-badge
+      config:
+        bgColor: rgba(0,0,0,0.0)
+        visible: = items[props.fan+props.speed].state>230
+        style:
+          background-image: url(/static/fan-on-5.png)
+          background-size: 105px
+          border-radius: 12px
+          height: 105px
+          left: 20px
+          position: absolute
+          top: 4px
+          width: 105px
+    - component: f7-icon
+      config:
+        f7: drop_fill
+        color: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'green' : 'gray'" 
+        size: 25px
+        style:
+          left: 5px
+          position: absolute
+          top: 5px
+    - component: Label
+      config:
+        style:
+          --f7-card-bg-color: rgba(0,0,0,0.0)
+          --f7-card-box-shadow: none
+          color: black
+          font-size: 20px
+          left: 50px
+          position: absolute
+          text-align: center
+          top: 44px
+          width: 54px
+        text: = Number.parseFloat((items[props.fan+props.speed].state)/25.4).toFixed(0)
+    - component: f7-row
+      config:
+        class:
+          - display-flex
+          - justify-content-flex-center
+          - align-items-center
+        style:
+          flex-wrap: nowrap
+          height: auto
+          margin-top: 5px
+          overflow: hidden
+          white-space: nowrap
+          width: auto
+          position: absolute
+          top: 112px
+          left: 5px
+        visible: true
+        width: auto
+      slots:
+        default:
+          - component: f7-col
+            config:
+              class:
+                - display-flex
+                - justify-content-flex-center
+              style:
+                height: auto
+                margin-bottom: 0px
+                margin-left: 0px
+                margin-right: 0px
+                margin-top: 0px
+                width: auto
+            slots:
+              default:
+                - component: oh-button
+                  config:
+                    action: command
+                    actionCommand: low
+                    actionItem: = props.fan+props.command
+                    class:
+                      - my_button
+                    color: "= items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5 ? 'green' : 'gray'"
+                    fill: "= items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5 ? true : false"
+                    outline: true"
+                    round: false
+                    small: true
+                    text: L
+          - component: f7-col
+            config:
+              class:
+                - display-flex
+                - justify-content-flex-center
+              style:
+                height: auto
+                margin-left: 1px
+                margin-right: 1px
+                width: auto
+            slots:
+              default:
+                - component: oh-button
+                  config:
+                    action: command
+                    actionCommand: medium
+                    actionItem: = props.fan+props.command
+                    class:
+                      - my_button
+                    color: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5 ? 'green' : 'gray'"
+                    fill: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5 ? true : false"
+                    outline: true
+                    round: false
+                    small: true
+                    text: M
+          - component: f7-col
+            config:
+              class:
+                - display-flex
+                - justify-content-flex-center
+              style:
+                height: auto
+                margin-left: 1px
+                margin-right: 1px
+                width: auto
+            slots:
+              default:
+                - component: oh-button
+                  config:
+                    action: command
+                    actionCommand: high
+                    actionItem: = props.fan+props.command
+                    class:
+                      - my_button
+                    color: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5 ? 'green' : 'gray'"
+                    fill: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5 ? true : false"
+                    outline: true
+                    round: false
+                    small: true
+                    text: H
+          - component: f7-col
+            config:
+              class:
+                - display-flex
+                - justify-content-flex-center
+              style:
+                height: auto
+                margin-left: 1px
+                margin-right: 1px
+                width: auto
+            slots:
+              default:
+                - component: oh-button
+                  config:
+                    class:
+                      - my_button
+                    color: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? 'green' : 'gray'"
+                    fill: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? true : false"
+                    outline: true
+                    round: false
+                    small: true
+                    iconF7: wrench
+                    iconSize: 16px
+                    popoverOpen: ='.speedPopover'
+                  slots:
+                    default:
+                      - component: f7-popover
+                        config:
+                          class: ='speedPopover'
+                        slots:
+                          default:
+                            - component: oh-slider-card
+                              config:
+                                item: =props.fan+props.speed
+                                label: true
+                                max: 250
+                                min: 20
+                                releaseOnly: true
+                                scale: true
+                                scaleSteps: 10
+                                scaleSubSteps: 2
+                                step: 5
+                                style:
+                                  --f7-range-bar-active-bg-color: rgba(241, 245, 39, 0.8)
+                                  --f7-range-bar-bg-color: linear-gradient(to top, rgba(0,0,0,0.9), rgba(246,158,81,0))
+                                  --f7-range-bar-border-radius: 10px
+                                  --f7-range-bar-size: 18px
+                                  --f7-range-knob-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3)
+                                  --f7-range-knob-size: 22px
+                                  --f7-range-label-text-color: white
+                                  --f7-range-scale-font-size: min(max(5px, 2.5vw), 18px)
+                                  --f7-range-scale-text-color: gray
+                                  border-radius: var(--f7-card-expandable-border-radius)
+                                  box-shadow: var(--f7-card-expandable-box-shadow)
+                                  width: auto
+                                title: "= 'Fan Speed ('+items[props.fan+props.speed].state+')'" 
+                                unit: ""
+                                vertical: true
+                                visible: true
+          - component: f7-col
+            config:
+              class:
+                - display-flex
+                - justify-content-flex-center
+              style:
+                height: auto
+                margin-left: 1px
+                margin-right: 1px
+                width: auto
+            slots:
+              default:
+                - component: oh-button
+                  config:
+                    action: command
+                    actionCommand: 50
+                    actionItem: =props.dimmerItem
+                    class:
+                      - my_button
+                    color: "= items[props.fan+props.timer].state>0 ? 'green' : 'gray'"
+                    fill: "= items[props.fan+props.timer].state>0 ? true : false"
+                    outline: true
+                    round: false
+                    small: true
+                    iconF7: hourglass
+                    iconSize: 20px
