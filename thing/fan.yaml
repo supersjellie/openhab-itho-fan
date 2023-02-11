@@ -7,7 +7,7 @@ configuration:
   baseURL: http://fan/api.html
   delay: 0
   stateMethod: GET
-  refresh: 60
+  refresh: 30
   commandMethod: GET
   contentType: application/json
   timeout: 3000
@@ -69,3 +69,19 @@ channels:
     configuration:
       mode: WRITEONLY
       commandExtension: ?command=%2$s
+  - id: timer_speed
+    channelTypeUID: http:number
+    label: current timer
+    description: null
+    configuration:
+      mode: READONLY
+      stateExtension: ?get=queue
+      stateTransformation: JSONPATH:$.queue[0].speed
+  - id: timer_time
+    channelTypeUID: http:number
+    label: timer time
+    description: null
+    configuration:
+      mode: READONLY
+      stateExtension: ?get=queue
+      stateTransformation: JSONPATH:$.queue[0].valid
