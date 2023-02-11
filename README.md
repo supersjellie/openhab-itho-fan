@@ -3,6 +3,11 @@
 ## Summary
 Arjen Hiemstra created and sells an addon for an itho CVE fan. This makes it controlable by WiFi and of course a home automation system. This is an implementation for openHAB including a widget. It's small, so intended use is a small page (phone) or a tiled dashboard. The latter is my setup,so for this it's tested. Most difficult in widgets is responsive behaviour. So it may be required to change CSS to match your needs.
 
+
+![example 1](https://github.com/Supersjellie/openhab-itho-fan/tree/main/images-wiki/example1.png)
+![example 2](https://github.com/Supersjellie/openhab-itho-fan/tree/main/images-wiki/example2.png)
+![example 3](https://github.com/Supersjellie/openhab-itho-fan/tree/main/images-wiki/example3.png)
+
 Features
 1. Depending on the speed the fan will show 1 of 7 images. 
 	* Below 30 it's shows grey (off, assuming you never completelly turn it off)
