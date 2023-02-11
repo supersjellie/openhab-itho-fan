@@ -1,0 +1,71 @@
+UID: http:url:fan
+label: fan
+thingTypeUID: http:url
+configuration:
+  authMode: BASIC
+  ignoreSSLErrors: false
+  baseURL: http://fan/api.html
+  delay: 0
+  stateMethod: GET
+  refresh: 60
+  commandMethod: GET
+  contentType: application/json
+  timeout: 3000
+  bufferSize: 2048
+channels:
+  - id: temperature
+    channelTypeUID: http:number
+    label: temperature
+    description: ""
+    configuration:
+      mode: READONLY
+      unit: °C
+      stateExtension: ?get=ithostatus
+      stateTransformation: JSONPATH:$.temp
+  - id: humidity
+    channelTypeUID: http:number
+    label: humidity
+    description: null
+    configuration:
+      mode: READONLY
+      stateExtension: ?get=ithostatus
+      stateTransformation: JSONPATH:$.hum
+  - id: ppmw
+    channelTypeUID: http:number
+    label: ppmw
+    description: null
+    configuration:
+      mode: READONLY
+      stateExtension: ?get=ithostatus
+      stateTransformation: JSONPATH:$.ppmw
+  - id: speed_status
+    channelTypeUID: http:number
+    label: speed status
+    description: null
+    configuration:
+      mode: READONLY
+      stateExtension: ?get=ithostatus
+      stateTransformation: JSONPATH:$['Speed status']
+  - id: fan_speed
+    channelTypeUID: http:number
+    label: fan speed
+    description: null
+    configuration:
+      mode: READONLY
+      stateExtension: ?get=ithostatus
+      stateTransformation: JSONPATH:$["Fan speed (rpm)"]
+  - id: current_speed
+    channelTypeUID: http:number
+    label: current speed
+    description: null
+    configuration:
+      mode: READWRITE
+      stateExtension: ?get=currentspeed
+      commandExtension: ?speed=%2$s
+  - id: command
+    channelTypeUID: http:string
+    label: command
+    description: null
+    configuration:
+      mode: WRITEONLY
+      commandExtension: ?command=%2$s
