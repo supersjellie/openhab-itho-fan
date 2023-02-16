@@ -121,7 +121,7 @@ openHAB doesn't update loaded charts (even when in popups). The trick is to add 
 ## Automating Ventilation Rule installation (optional)
 Optional, if you want no automatic change to ventilation settings you can skip this. This will (also) result in somewhat delay when using widget buttons
 1. Create a new rule
-2. Give it a name and label (I used timertick for both, but it doesn't matter what you choose)
+2. Give it a name and label (I used fan for both, but it doesn't matter what you choose)
 3. Save it
 4. Now change from the GUI config to the code tab
 5. Replace code with the fan_rule yaml in folder rules 
