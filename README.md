@@ -7,6 +7,12 @@ Arjen Hiemstra created and sells an addon for an itho CVE fan. This makes it con
 ![example 1](images-wiki/example1.png?raw=true)
 ![example 2](images-wiki/example2.png?raw=true)
 ![example 3](images-wiki/example3.png?raw=true)
+![example 4](images-wiki/example4.png?raw=true)
+left to right, nightmode, daymode, manual set and auto humidity mode.
+
+![example 5](images-wiki/example5.png?raw=true)
+![example 6](images-wiki/example6.png?raw=true)
+left to right, 24 hours humidity graph and free manual setting
 
 Features
 1. Depending on the speed the fan will show 1 of 7 images. 
@@ -32,12 +38,28 @@ Features
 	* If it happens to be the low/medium/high (+-5), this button will show green
 	* Any other value will make the setup/wrench button green
 5. It had a humidity icon
-	* Between 40 and 60% (recommended values for health) it will be gray, else green
+	* Between 40 and 60% (recommended values for health) it will be green, else gray
+	* Pressing it will show a 24 hour humidity graph (new!)
+6. It had a auto control icon
+	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
+	* If it shows a sun, it's in day mode. If the icon is green with according speed. If gray a manual change had been made.
+	* If it shows a tornado, it spinned up for humidity. If the icon is green with according speed. If gray a manual change had been made (timer button will also be green).
+7. It has an auto settings
+	* All configurable (incl. disabling) by rule variables
+	* Day and Night setting for fan speed
+	* Automatic spin up while/after cooking/showering (and prevent on/off loops) 
+	* Reset of manual input to default day/night speed
+
+## Versions/releases
+0.1 : Initial version
+1.0 : first release of complete set with thing, widget and rules
 	
 It new at the moment, so work in progress. Expect changes. 
-	* Next addition will be a rule to automaticly control fan when showering or at day/night.
-	* A popup graph with 24 hours humidity and/or speed
-	* The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating. Maybe use mqtt? Or it's not worth it ...
+	* ~~Next addition will be a rule to automaticly control fan when showering or at day/night.~~ done in 1.0
+	* ~~A popup graph with 24 hours humidity and/or speed~~ done in 1.0
+	* ~~The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating.~~ improved in 1.0 (buttons update immediatelly)
+	* Showing timer countdown (maybe in circle around 'fan'' axis?
+	* Press day/night icon to restore normal day/night settings?
 
 ## Preperation
 1. Have an openhab installation :grin:
@@ -48,6 +70,8 @@ It new at the moment, so work in progress. Expect changes.
 4. When installing the above you can choose a host name (WiFi settings), remember it. The manual assumes 'fan'
 5. Install in openhab the http binding, see [documentation](https://www.openhab.org/addons/bindings/http/)
 6. Install in openhab the jsonpath transformation, see [documentation](https://www.openhab.org/addons/transformations/jsonpath/)
+7. Install in openHAB the javascript scriping engine, see [documentation](http://hal9000:8080/settings/addons/automation-jsscripting)
+	* This installs the new ECMAscript 2021+ version with OH libraries that somewhere in the future will replace the old (now default) js-script. If you would like to stick to the default build-in version you'll have to change the rules a bit	
 
 ## Create thing
 1. Create a new thing
@@ -78,6 +102,27 @@ When opening the current_speed it can't be controlled with the default GUI. You 
 2. Remove default code
 3. Copy and past the yaml in the widget code of this project and save
 
+## Refresh Rule installation
+openHAB doesn't update loaded charts (even when in popups). The trick is to add a key to the f7-chart dependend on a periodically changing item. Since the popop shows a day chart every hour is more  than enough. You might already have encountered this challenge. So there's two options:
+1. If you already have such an item. Look in the chart yaml for the key: = "fan" + items.timertick_hour.state and replace it with your item.
+2. If this is the first time you need this
+	* Create a new rule
+	* Give it a name and label (I used timertick for both, but it doesn't matter what you choose)
+	* Save it
+	* Now change from the GUI config to the code tab
+	* Replace code with the timertick_rule yaml in folder rules 
+	* save it
+	* run it (this will create the 'timertick_hour' item and initialize it.
+
+## Automating Ventilation Rule installation (optional)
+Optional, if you want no automatic change to ventilation settings you can skip this. This will (also) result in somewhat delay when using widget buttons
+1. Create a new rule
+2. Give it a name and label (I used timertick for both, but it doesn't matter what you choose)
+3. Save it
+4. Now change from the GUI config to the code tab
+5. Replace code with the fan_rule yaml in folder rules 
+6. save it
+
 ## Widget usage/configuration
 1. Add a new widget to your dashboard/page
 2. Set the props and save
@@ -85,7 +130,7 @@ When opening the current_speed it can't be controlled with the default GUI. You 
 	* If you chose other names for the items, you can also select the seperate items
 	* set low, medium and high according to the values in the itho addon system setup
 
-##Usage
+## Usage
 1. Add the widget 'widget_fan' to your dashboard or page. Remember it's intended for tiled dashboards (so small)
 2. Set the props of the widget
 	* Option 1 : Only set the equipment items (don't change seperate items)
@@ -96,10 +141,24 @@ When opening the current_speed it can't be controlled with the default GUI. You 
 	* Press hourglass to temporally increase speed (accoding to high setting and timer1)
 	* Press wrench to set another speed (slider will show)
 	* Icons will change according to settings, remember. The fan will respond immediatelly, the GUI with a 30 second delay (according to thing update frequency)
-	
-	
-	
+4. If you installed the fan rule, you can change automation settings at the start of the script
+	* scriptName : scriptname is used in logging
+	* group : Used to find fan items
+	* nightSpeed : Nightspeed, integer value or low/medium/high
+	* daySpeed : Dayspeed, integer value or low/medium/high
+	* humidSpeed : Speed for ventilation when humid or low/medium/high or timer1/timer2/timer3
+	* dayStart : Hour day mode starts (>=)
+	* nightStart : Hour night mode starts (>=)
+	* resetMinutes : Minutes manual command can reset to default day/night settings (-1 disable)
+	* humidityTreshold : %humidity rise to start
+	* delayFanStart : Minutes to start fan AFTER humidity raises over treshold
+	* delayFanEnd : Minutes to keep fan turning after humidity fan start (ignored when speed set to timer1/timer2/timer3)
+	* delayFanNextStart : Minutes wait for next start
 
+## Versions
+0.9 Initial version
+1.0 First release (added humidity graph, auto setting rule and layout improvements)
+	
 ## Code
 The code is pretty standard. Things you might find interesting for changes
 1. It uses the the web api at api.html (documentation  in the webpages of the add-on itself)
@@ -110,7 +169,7 @@ The code is pretty standard. Things you might find interesting for changes
 	* api.html?get=queue (undocumented api, returns json with timers)
 2. Range openHab accepts for speed can be changed in metadata of the current_speed item
 3. Since the settings for low/medium/high can't be retrieved from the api (as far as I know) the widget takes them as input parameters
-4. Most behaviour is 'programmed' in the widget
+4. Most manual/ gui behaviour is 'programmed' in the widget
 5. The widget uses a trick to allow both the equipment as seperate items using the default values and concatenating them in the formulas
 	* Like items[props.fan+props.speed].state
 	* If the equipment 'fan' is given it adds the default item names 'fan' + '_current_speed'
@@ -122,4 +181,10 @@ The code is pretty standard. Things you might find interesting for changes
 	* Give it a class with the unique name, but without the first "." (and if present replace the other point by a space)!
 	* Now they should connect/work. Always save before testing, openHAB will leave the widgetscreen when misconfigured.
 7. If you're lazy, add your low/medium/high speed as a default. I used mine :smiley:
+8. OpenHAB charts don't update/refresh when loaded. The trick is to add a key dependend on a item that changes periodically. I've got two items for 15 minutes and a hour called timertick and timertick hour. If you put a key: = "fan" + items.timertick_hour.state (name must be unique) in the f7-card the chart will reload/refresh. This also applies to popups with charts (they're loaded hidden) 
+9. Automatic behaviour is programmed in the rule. Code is commented to explain
+10. Rules in ECMAscript allow 'let' but don't use it at main level (alway var).
+11. Reason is the script object is reused. You can take advantage of this by placing variables on the this object. They will become in memory vars that can be used over executions
+12. The rule it triggered by CRON and change on current_speed. The latter is set by the rule so a bit of logic is present to prevent execution loops
+13. The rule also helps the GUI by resetting the command item. If it's 'low' it means low has been sent to addon (and applied) but the result had not been read by openHAB (max 30 secs delay). When applied it will be 'X'
 	

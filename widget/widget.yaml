@@ -1,5 +1,6 @@
 uid: widget_fan
-tags: []
+tags:
+  - v1.0
 props:
   parameters:
     - context: item
@@ -37,6 +38,13 @@ props:
       name: command
       required: false
       type: TEXT
+    - context: item
+      default: _mode
+      description: Item with auto mode (by rule)
+      label: item mode
+      name: mode
+      required: false
+      type: TEXT
     - context: number
       default: "25"
       description: low setting
@@ -59,19 +67,10 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Feb 11, 2023, 4:17:52 PM
+timestamp: Feb 15, 2023, 6:07:54 PM
 component: f7-card
 config:
-  stylesheet: >
-    .my_button {
-      height: 20px;
-      width: 26px;
-      padding: 1px 0px 0px 0px;
-      margin: 0px 0px 0px 0px;
-      insets: 0px 0px 0px 0px;
-      line-height: 16px;
-      font-size: 14px; 
-    }
+  key: = 'fan' + items.timertick_hour.state
 slots:
   default:
     - component: f7-badge
@@ -167,13 +166,28 @@ slots:
           width: 105px
     - component: f7-icon
       config:
-        f7: drop_fill
-        color: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'green' : 'gray'"
+        f7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sun_max_fill' : 'tornado' "
         size: 25px
         style:
-          left: 5px
+          color: "= items[props.fan+props.mode].state>=10 ? '#4cd964': 'gray'"
+          left: 122px
           position: absolute
           top: 5px
+    - component: oh-button
+      config:
+        iconF7: drop_fill
+        iconSize: 25px
+        iconColor: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'gray' : 'green'"
+        style:
+          left: 3px
+          position: absolute
+          top: 2px
+          width: 25px
+        class:
+          - display-flex
+          - justify-content-flex-center
+          - align-items-center
+        popoverOpen: ='.humidityPopover'
     - component: Label
       config:
         style:
@@ -203,6 +217,18 @@ slots:
           position: absolute
           top: 112px
           left: 5px
+        stylesheet: >
+          .my_button {
+            height: 22px !important;
+            min-height: 22px !important;
+            width: 26px !important;
+            min-width: 26px !important;
+            padding: 1px 0px 0px 0px;
+            margin: 0px 0px 0px 0px;
+            insets: 0px 0px 0px 0px;
+            line-height: 16px;
+            font-size: 14px; 
+          }
         visible: true
         width: auto
       slots:
@@ -228,8 +254,8 @@ slots:
                     actionItem: = props.fan+props.command
                     class:
                       - my_button
-                    color: "= items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5 ? 'green' : 'gray'"
-                    fill: "= items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5 ? true : false"
+                    color: "= (items[props.fan+props.command].state=='low' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.fan+props.command].state=='low' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5)) ? true : false"
                     outline: true"
                     round: false
                     small: true
@@ -253,8 +279,8 @@ slots:
                     actionItem: = props.fan+props.command
                     class:
                       - my_button
-                    color: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5 ? 'green' : 'gray'"
-                    fill: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5 ? true : false"
+                    color: "= (items[props.fan+props.command].state=='medium' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5)) ? 'green' : 'gray'"
+                    fill: "= (items[props.fan+props.command].state=='medium' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5)) ? true : false"
                     outline: true
                     round: false
                     small: true
@@ -278,8 +304,8 @@ slots:
                     actionItem: = props.fan+props.command
                     class:
                       - my_button
-                    color: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5 ? 'green' : 'gray'"
-                    fill: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5 ? true : false"
+                    color: "= (items[props.fan+props.command].state=='high' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.fan+props.command].state=='high' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5)) ? true : false"
                     outline: true
                     round: false
                     small: true
@@ -300,49 +326,14 @@ slots:
                   config:
                     class:
                       - my_button
-                    color: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? 'green' : 'gray'"
-                    fill: "=items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? true : false"
+                    color: "= items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? 'green' : 'gray'"
+                    fill: "= items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? true : false"
                     outline: true
                     round: false
                     small: true
                     iconF7: wrench
                     iconSize: 16px
                     popoverOpen: ='.speedPopover'
-                  slots:
-                    default:
-                      - component: f7-popover
-                        config:
-                          class: ='speedPopover'
-                        slots:
-                          default:
-                            - component: oh-slider-card
-                              config:
-                                item: =props.fan+props.speed
-                                label: true
-                                max: 250
-                                min: 20
-                                releaseOnly: true
-                                scale: true
-                                scaleSteps: 10
-                                scaleSubSteps: 2
-                                step: 5
-                                style:
-                                  --f7-range-bar-active-bg-color: rgba(241, 245, 39, 0.8)
-                                  --f7-range-bar-bg-color: linear-gradient(to top, rgba(0,0,0,0.9), rgba(246,158,81,0))
-                                  --f7-range-bar-border-radius: 10px
-                                  --f7-range-bar-size: 18px
-                                  --f7-range-knob-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3)
-                                  --f7-range-knob-size: 22px
-                                  --f7-range-label-text-color: white
-                                  --f7-range-scale-font-size: min(max(5px, 2.5vw), 18px)
-                                  --f7-range-scale-text-color: gray
-                                  border-radius: var(--f7-card-expandable-border-radius)
-                                  box-shadow: var(--f7-card-expandable-box-shadow)
-                                  width: auto
-                                title: = 'Fan Speed ('+items[props.fan+props.speed].state+')'
-                                unit: ""
-                                vertical: true
-                                visible: true
           - component: f7-col
             config:
               class:
@@ -362,10 +353,119 @@ slots:
                     actionItem: = props.fan+props.command
                     class:
                       - my_button
-                    color: "= items[props.fan+props.timer].state>0 ? 'green' : 'gray'"
-                    fill: "= items[props.fan+props.timer].state>0 ? true : false"
+                    color: "= (items[props.fan+props.mode].state % 10)==2 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.fan+props.mode].state % 10)==2 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? true : false"
                     outline: true
                     round: false
                     small: true
                     iconF7: hourglass
                     iconSize: 20px
+    - component: f7-popover
+      config:
+        class: ='speedPopover'
+      slots:
+        default:
+          - component: oh-slider-card
+            config:
+              item: =props.fan+props.speed
+              label: true
+              max: 250
+              min: 20
+              releaseOnly: true
+              scale: true
+              scaleSteps: 10
+              scaleSubSteps: 2
+              step: 5
+              style:
+                --f7-range-bar-active-bg-color: rgba(241, 245, 39, 0.8)
+                --f7-range-bar-bg-color: linear-gradient(to top, rgba(0,0,0,0.9), rgba(246,158,81,0))
+                --f7-range-bar-border-radius: 10px
+                --f7-range-bar-size: 18px
+                --f7-range-knob-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3)
+                --f7-range-knob-size: 22px
+                --f7-range-label-text-color: white
+                --f7-range-scale-font-size: min(max(5px, 2.5vw), 18px)
+                --f7-range-scale-text-color: gray
+                border-radius: var(--f7-card-expandable-border-radius)
+                box-shadow: var(--f7-card-expandable-box-shadow)
+                width: auto
+              title: = 'Fan Speed ('+items[props.fan+props.speed].state+')'
+              unit: ""
+              vertical: true
+              visible: true
+    - component: f7-popover
+      config:
+        class: = 'humidityPopover'
+        style:
+          --f7-popover-bg-color: rgb(50,50,25)
+      slots:
+        default:
+          - component: oh-chart
+            config:
+              height: 150px
+              options:
+                backgroundColor: transparent
+              period: D
+              periodVisible: false
+              stylesheet: >
+                .oh-chart {
+                  padding: 0px!important;
+                  inset: 0px!important;
+                  margin: 0px!important;
+                }
+              width1: 400px
+            slots:
+              grid:
+                - component: oh-chart-grid
+                  config:
+                    height: 67%
+                    left: 35px
+                    right: 10px
+                    top: 25px
+              series:
+                - component: oh-time-series
+                  config:
+                    areaStyle1: {}
+                    item: =props.fan+props.humidity
+                    itemStyle:
+                      color: rgb(50, 200, 50)
+                    name: Temperature
+                    type: line
+              title:
+                - component: oh-chart-title
+                  config:
+                    fontSize: 10px
+                    left: center
+                    show: true
+                    style:
+                      font-size: 10px
+                    subtext: Humidity
+                    top: -10px
+              tooltip:
+                - component: oh-chart-tooltip
+                  config:
+                    trigger: axis
+              xAxis:
+                - component: oh-time-axis
+                  config:
+                    axisLabel:
+                      show: true
+                    boundaryGap: false
+                    gridIndex: 0
+                    splitNumber: 3
+                    type: time
+              yAxis:
+                - component: oh-value-axis
+                  config:
+                    axisLabel:
+                      formatter: "{value}%"
+                      show: true
+                    axisTick:
+                      inside: true
+                    boundaryGap:
+                      - 0%
+                      - 0%
+                    gridIndex: 0
+                    scale: false
+                    splitLine: true
+                    type: value

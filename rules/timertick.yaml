@@ -1,0 +1,104 @@
+configuration: {}
+triggers:
+  - id: "3"
+    configuration:
+      cronExpression: 0 0/15 * * * ? *
+    type: timer.GenericCronTrigger
+conditions: []
+actions:
+  - inputs: {}
+    id: "1"
+    configuration:
+      type: application/javascript;version=ECMAScript-2021
+      script: >+
+        /*
+
+        Timertick script version 1.0
+
+
+        Creates (if needed) and updates two timertick items with a minute and hour value to be used for refreshing graphs.
+
+        CRON should not be to fast for the minute value (graph will flicker during update). 
+
+        15 minutes is fine (for a graph showing 1 or 2 hours).
+
+        The hour timer can be used in day graphs.
+
+
+        Usage, in a widget add a key in main compomnent f7-card referring to this item (with a string to make it unique)
+
+
+        component: f7-card
+
+        config:
+          key: = "fan" + items.timertick_hour.state
+
+        */
+
+        var scriptName="timertick";
+
+
+        //init
+
+        console.info(scriptName+" running");
+
+        var now = time.ZonedDateTime.now();
+
+
+        //get items
+
+        var timertick=getAddItem(scriptName);
+
+        var timertick_h=getAddItem(scriptName+'_hour');
+
+
+        //update item with minute (so 'mirrors 15 minute CRON') and hour value as an integer
+
+        timertick.postUpdate(Number.parseInt(now.hour()*60+now.minute()));
+
+        timertick_h.postUpdate(Number.parseInt(now.hour()*60));
+
+
+        //done
+
+        console.info(scriptName+" done in "+ (-now.getMillisFromNow())+" millisec");
+
+
+
+
+        /*
+          ##### functions
+        */
+
+
+        //get an existiing item or create it (by name)
+
+        function getAddItem(name){
+          let item=null;
+          let list=searchItem(name);
+          if (list.length>=1){
+            item=list[0];
+          }else {
+            console.info('creating item '+name);
+            item=items.addItem({
+              type: 'Number',
+              name: name,
+              label: name
+            });
+          }
+          
+          return item;
+        }
+
+
+        //search items with name (return list)
+
+        function searchItem(name){
+          return items.getItems().filter(
+            function(item){
+              return (item.name==this);    
+            }
+          ,name);
+        }
+
+    type: script.ScriptAction
