@@ -8,10 +8,12 @@ Arjen Hiemstra created and sells an addon for an itho CVE fan. This makes it con
 ![example 2](images-wiki/example2.png?raw=true)
 ![example 3](images-wiki/example3.png?raw=true)
 ![example 4](images-wiki/example4.png?raw=true)
+
 left to right, nightmode, daymode, manual set and auto humidity mode.
 
 ![example 5](images-wiki/example5.png?raw=true)
 ![example 6](images-wiki/example6.png?raw=true)
+
 left to right, 24 hours humidity graph and free manual setting
 
 Features
