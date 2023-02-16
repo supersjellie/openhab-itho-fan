@@ -57,13 +57,13 @@ Features
 * 1.0 - First release of complete set with thing, widget and rules
 	
 It new at the moment, so work in progress. Expect changes. 
-	* done in 1.0 - Next addition will be a rule to automaticly control fan when showering or at day/night.
-	* done in 1.0 - A popup graph with 24 hours humidity and/or speed.
-	* done in 1.0 - The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating.
-	* Showing timer countdown (maybe in circle around 'fan' axis?
-	* Press day/night icon to restore normal day/night settings?
-	* split day in morning/afternoon/evening?
-	* humidity level in indicator?
+* done in 1.0 - Next addition will be a rule to automaticly control fan when showering or at day/night.
+* done in 1.0 - A popup graph with 24 hours humidity and/or speed.
+* done in 1.0 - The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating.
+* Showing timer countdown (maybe in circle around 'fan' axis?
+* Press day/night icon to restore normal day/night settings?
+* split day in morning/afternoon/evening?
+* humidity level in indicator?
 
 ## Preperation
 1. Have an openhab installation :grin:
