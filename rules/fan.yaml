@@ -17,16 +17,20 @@ actions:
       script: >-
         /*
 
-        Fan script version 1.0
+        Fan script version 1.1
 
 
-        Creates (if needed) a mode item under group fan (naming according to script name)
+        (1.0) Creates (if needed) a mode item under group fan (naming according to script name)
 
-        Updates mode item (0=night,1=day,2=shower)
+        (1.0) Updates mode item (0=night,1=day,2=shower)
 
-        Updates speed/timer of fan
+        (1.0) Updates speed/timer of fan
 
-        change settings according to your situation (speed can be set as number or 'low/medium/high')
+        (1.0) change settings according to your situation (speed can be set as number or 'low/medium/high')
+
+        (1.1) calculate/create fanRemainTime and fanMaxTime item (in order for the widget to show this)
+
+        (1.1) easier debug messages/ improved null check for items with NULL value (instead of null)
 
         */
 
@@ -39,9 +43,9 @@ actions:
 
         var nightSpeed=20;//nightspeed, integer value or low/medium/high
 
-        var daySpeed=40;//dayspeed, integer value or low/medium/high
+        var daySpeed=60;//dayspeed, integer value or low/medium/high
 
-        var humidSpeed=100;//speed for ventilation when humid or low/medium/high or timer1/timer2/timer3
+        var humidSpeed=120;//speed for ventilation when humid or low/medium/high or timer1/timer2/timer3
 
         var dayStart=7;// hour day mode starts (>=)
 
@@ -51,7 +55,7 @@ actions:
 
         var humidityTreshold=10;// %humidity rise to start
 
-        var delayFanStart=10;//minutes to start fan AFTER humidity raises over treshold
+        var delayFanStart=5;//minutes to start fan AFTER humidity raises over treshold
 
         var delayFanEnd=10;//minutes to keep fan turning after humidity fan start (ignored when speed set to timer1/timer2/timer3)
 
@@ -59,6 +63,8 @@ actions:
 
 
         //init
+
+        var debugMode=false;//log debug as info (easier than changing loglevel in karaf)
 
         console.info(scriptName+"script started");
 
@@ -76,9 +82,16 @@ actions:
         var humidity=searchFirstItem(group,"humidity");
 
 
+        var fanRemainTime=getAddItem(group,"timer_remaintime");
+
+        var fanMaxTime=getAddItem(group,"timer_maxtime");
+
+        var fanTime=searchFirstItem(group,"timer_time");
+
+
         //create in mem vars (script object is cached in openHAB). Will be erased on script save/change
 
-        if (this.ruleChange==undefined || this.ruleChange==null){
+        if (isNaN(this.ruleChange)){
           
           //did the rule change the value?
           this.ruleChange=false;
@@ -92,26 +105,34 @@ actions:
           
           //countdown/delay for humidity fan start (minutes, depening on CRON script!)
           this.humidFanStart=-1000-delayFanNextStart;
+          
+          //no timer active
+          this.timerRun=0;
+          
+          //first run rule, erase button for openhab (itho addon won't respond)
+          fanCommand.sendCommand('X');
         }
 
 
         //triggered by cron or currentspeed item?
 
-        var valueTrigger=(this.event!=null);
+        var valueTrigger=(!isNaN(this.event));
+
 
 
         if (valueTrigger){
           //so thing is updated, meaning command is processed. Clear it (widget used command to color buttons instant)
-          if (fanCommand.state!=undefined && fanCommand.state!=null && fanCommand.state!='' && fanCommand.state!='X'){
+          if (!isNaN(fanCommand.state) && fanCommand.state!='' && fanCommand.state!='X'){
             //it is a button
-            console.debug("Reset command to X");
-            if (fanMode.state!=undefined && fanMode.state!=null && fanMode.state>=10){
+            debug("Reset command to X");
+            if (!isNaN(fanMode.state) && fanMode.state>=10){
               //make mode inactive
               fanMode.postUpdate(fanMode.state % 10);
             }
             
             //erase button for openhab (itho addon won't respond)
-            fanCommand.sendCommand('X')
+            fanCommand.sendCommand('X');
+            
           } 
         }
 
@@ -120,15 +141,25 @@ actions:
 
         if (valueTrigger && ruleChange){
           //value changed by rule itself. Reset and ignore
-          console.debug("trigger=rule");
+          debug("trigger=rule");
           ruleChange=false;
+
+          
         }else if (valueTrigger){
           //triggered by external factor, press on remote, dashboard, fan GUI. Always allow it (before adjusting)
-          console.debug("trigger=external");
+          debug("trigger=external");
           lastUpdate=now;
         }else {
           //trigger is CRON job/time based
-          console.debug("trigger=cron");
+          debug("trigger=cron");
+          
+
+          //check remote
+          if(fanTime.state>0 && now.isAfter(lastUpdate)){
+            //remote pressed, disable auto mode for 5 minutes
+            debug("remote used");
+            lastUpdate=now.plusMinutes(5);
+          }
 
           //reset ruleChange
           ruleChange=false;
@@ -141,7 +172,7 @@ actions:
           
           //current hour
           let hour=now.hour();
-          
+            
           //new humidity baseline needed?
           if (hour!=baselineHour){
             //recalc humidity baseline
@@ -150,7 +181,7 @@ actions:
             if (humidity!=null){
               //sensor present
               baseline=humidity.history.averageBetween(now.minusMinutes(70),now.minusMinutes(10));
-              console.debug("baseline recalculated "+baseline);
+              debug("baseline recalculated "+baseline);
             }
           }
 
@@ -163,7 +194,6 @@ actions:
             humidityOverTreshold=(humidity.state>baseline+humidityTreshold);
           }
           
-
           let timerMode=false;
           if (!Number.isInteger(humidSpeed) && humidSpeed.toString().toLowerCase().startsWith("timer")){
             //speedsetting for humidity is timer (that automatic switched off)
@@ -202,8 +232,8 @@ actions:
             humididyFanOn=true;
             humidityRunning=true;
             changeAllowed=true;//always start!
-            console.debug("humidity fan start");
-          } else if (humidFanStart>-1000 && humidFanStart<-delayFanEnd){
+            debug("humidity fan start");
+          } else if (humidFanStart>-1000 && humidFanStart<=-delayFanEnd){
             //end delay finished, end fan
             humidFanStart=-1000;
             humididyFanOn=false;
@@ -215,7 +245,7 @@ actions:
               //itho doesn't stop time, so allow/force it
               changeAllowed=true;//always end!
             }
-            console.debug("humidity fan end");
+            debug("humidity fan end");
           } else {
             //decrease wait timer
             if (humidFanStart<0){
@@ -243,10 +273,10 @@ actions:
           let currentSpeed=fanSpeed.state;
           let checkSpeed=null;
 
-          if ((humididyFanOn || humidityRunning) && Number.isInteger(humidSpeed)){
+          if ((humididyFanOn) && Number.isInteger(humidSpeed)){
             speed=humidSpeed;
             mode=2;
-          } else if (humididyFanOn || humidityRunning){
+          } else if (humididyFanOn){
             command=humidSpeed;
             mode=2;
           } else if (humidityRunning){
@@ -270,12 +300,12 @@ actions:
             checkSpeed=speed;
           }
 
-          console.debug(" day="+day+" speed="+speed+" command="+command+" mode="+mode+" "+"change "+changeAllowed+" sp="+ parseInt(currentSpeed));
+          debug("day="+day+" speed="+speed+" command="+command+" mode="+mode+" "+"change "+changeAllowed+" sp="+ parseInt(currentSpeed)+" mode="+mode+" humid="+humidFanStart);
 
           //only update items if values are calculated and changed (else rule will trigger itself creating loops)
           if (!changeAllowed && (currentSpeed!=speed || command!=null)){
             //at the moment automatic changes are not allowed (and change is requested), log
-            console.debug("no changes allowed");    
+            debug("no changes allowed");    
           } else if (!changeAllowed){
             //at the moment automatic changes are not allowed
           }else if (speed!=null && speed!=parseInt(fanSpeed.state)){
@@ -300,6 +330,57 @@ actions:
           if (mode!=null && mode!=parseInt(fanMode.state)){
             fanMode.postUpdate(mode);
           }
+          
+          //reset nulls on new items
+          if (isNaN(fanRemainTime.state)){
+            fanRemainTime.postUpdate(0);
+          }
+          if (isNaN(fanMaxTime.state)){
+            fanMaxTime.postUpdate(0);
+          }
+
+          //remaining (increased) fan time
+          if(fanTime.state>0 && fanMaxTime.state==0){
+            //remote pressed and no maxtime yet (assume setting in minutes and one lost because of update frequency)
+            fanMaxTime.postUpdate(Math.ceil(fanTime.state/1000/60)*60+60);
+            fanRemainTime.postUpdate(Math.floor(fanTime.state/1000));
+            timerRun=1;
+          }else if (timerRun==1 && fanTime.state==0 && fanMaxTime.state!=0){
+            //reset (remote) timer
+            timerRun=0;
+            fanMaxTime.postUpdate(0);
+            fanRemainTime.postUpdate(0);
+          } else if (timerRun==1){
+            //running remote, change time
+            fanRemainTime.postUpdate(Math.floor(fanTime.state/1000));
+          } else if (timerRun==0 && humididyFanOn){
+            //auto run by humidity
+            fanMaxTime.postUpdate(delayFanEnd*60);
+            fanRemainTime.postUpdate(delayFanEnd*60);
+            timerRun=2;
+          } else if (timerRun==2 && !humidityRunning){
+            //end of (auto) run
+            timerRun=0;
+            debug("end");
+          }else if (timerRun==2){
+            //running auto, change time
+            let r=delayFanEnd*60+humidFanStart*60;//(humidFanStart is negative minutes!)
+            if (r<0){
+              //to be sure
+              r=0;
+            }
+            fanRemainTime.postUpdate(r);
+          }
+          
+          //reset
+          if (timerRun==0 && (fanMaxTime.state!=0 || fanRemainTime.state!=0)){
+            fanMaxTime.postUpdate(0);
+            fanRemainTime.postUpdate(0);
+
+          }
+
+          
+
 
         }
 
@@ -371,5 +452,14 @@ actions:
               return (item.name==this);    
             }
           ,search);
+        }
+
+
+        function debug(text){
+          if (debugMode){
+            console.info(text);
+          }else {
+            console.debug(text);
+          }
         }
     type: script.ScriptAction

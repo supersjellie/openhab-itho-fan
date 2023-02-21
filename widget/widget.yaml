@@ -1,6 +1,6 @@
 uid: widget_fan
 tags:
-  - v1.0
+  - v1.1
 props:
   parameters:
     - context: item
@@ -45,6 +45,20 @@ props:
       name: mode
       required: false
       type: TEXT
+    - context: item
+      default: _timer_maxtime
+      description: Item with max time (incr. fan speed)
+      label: item maxtime
+      name: maxtime
+      required: false
+      type: TEXT
+    - context: item
+      default: _timer_remaintime
+      description: Item with remain time (incr. fanspeed)
+      label: item remaintime
+      name: remaintime
+      required: false
+      type: TEXT
     - context: number
       default: "25"
       description: low setting
@@ -67,10 +81,22 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Feb 15, 2023, 6:07:54 PM
+timestamp: Feb 20, 2023, 7:00:28 PM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
+  stylesheet: >
+    .my_button {
+      height: 22px !important;
+      min-height: 22px !important;
+      width: 26px !important;
+      min-width: 26px !important;
+      padding: 1px 0px 0px 0px;
+      margin: 0px 0px 0px 0px;
+      inset: 0px 0px 0px 0px;
+      line-height: 16px;
+      font-size: 14px; 
+    }
 slots:
   default:
     - component: f7-badge
@@ -193,14 +219,43 @@ slots:
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
+          transform: rotate(180deg)
+          color: "#4cd964"
+          font-size: 9px
+          position: absolute!important
+          left: 24px!important
+          top: 6px!important
+          text-align: center
+          width: 5px
+          height: 20px
+          word-break: break-word
+          line-height: 4px
+        text: "='▪'.repeat(Math.round(items[props.fan+props.humidity].state/20)) "
+    - component: Label
+      config:
+        style:
+          --f7-card-bg-color: rgba(0,0,0,0.0)
+          --f7-card-box-shadow: none
           color: black
           font-size: 20px
           left: 50px
           position: absolute
           text-align: center
-          top: 44px
+          top: 43px
           width: 54px
         text: = Number.parseFloat((items[props.fan+props.speed].state)/25.4).toFixed(0)
+    - component: f7-gauge
+      config:
+        
+        style:
+          position: absolute
+          top: 42px
+          left: 60px
+        size: 35
+        value: "= items[props.fan+props.maxtime].state==0 ? 0 : 1.0*(items[props.fan+props.remaintime].state)/items[props.fan+props.maxtime].state"
+        borderColor: darkgreen
+        borderWidth: 6
+        borderBgColor: transparant
     - component: f7-row
       config:
         class:
@@ -225,7 +280,7 @@ slots:
             min-width: 26px !important;
             padding: 1px 0px 0px 0px;
             margin: 0px 0px 0px 0px;
-            insets: 0px 0px 0px 0px;
+            inset: 0px 0px 0px 0px;
             line-height: 16px;
             font-size: 14px; 
           }

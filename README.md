@@ -28,6 +28,7 @@ Features
 2. In the center of the fan the speed is shown
 	* It will show in % using the itho addon range 0-254
 	* It can go below 20 but I read not all fans will keep turning at a very low setting. This is a safe value.
+	* When running on a timer a (decreasing) circle will appear to show remaiing time (both for remote and auto-rule)
 2. It has a low, medium, high button. 
 	* This will set the corresponding speed (as set in the itho addon)
 	* The chosen button will light up green (also when it's set by the remote!)
@@ -41,6 +42,7 @@ Features
 	* Any other value will make the setup/wrench button green
 5. It had a humidity icon
 	* Between 40 and 60% (recommended values for health) it will be green, else gray
+	* small 5 dotted indicator (for every 20%)
 	* Pressing it will show a 24 hour humidity graph (new!)
 6. It had a auto control icon
 	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
@@ -52,18 +54,21 @@ Features
 	* Automatic spin up while/after cooking/showering (and prevent on/off loops) 
 	* Reset of manual input to default day/night speed
 
-## Versions/releases
-* 0.1 - Initial version
-* 1.0 - First release of complete set with thing, widget and rules
+## Worklist
+* 1.0 - Released
+* 1.1 - Current - Work in progress
 	
 It new at the moment, so work in progress. Expect changes. 
 * done in 1.0 - Next addition will be a rule to automaticly control fan when showering or at day/night.
 * done in 1.0 - A popup graph with 24 hours humidity and/or speed.
 * done in 1.0 - The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating.
-* Showing timer countdown (maybe in circle around 'fan' axis?
+* done in 1.1 - Showing timer countdown (maybe in circle around 'fan' axis)
 * Press day/night icon to restore normal day/night settings?
 * split day in morning/afternoon/evening?
-* humidity level in indicator?
+* done in 1.1 - humidity level in indicator (5 dots/ every 20%)
+* The API uses three queries on the url and I combined them in one thing. Maybe openHAB processes all url's three times now. Accept this or split them?
+* done in 1.1 - Bug, remote timer 'overidden' by autorule before end of timer
+* CSS issue with mobile mode (openHab app), probably because of min sizes. Testing with full screen chrome in desktop mode.
 
 ## Preperation
 1. Have an openhab installation :grin:
@@ -162,6 +167,7 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 ## Versions
 0.9 Initial version
 1.0 First release (added humidity graph, auto setting rule and layout improvements)
+1.1 Second release (added humidity indicator, remaining time for timers)
 	
 ## Code
 The code is pretty standard. Things you might find interesting for changes
