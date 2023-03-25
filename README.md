@@ -11,10 +11,11 @@ Arjen Hiemstra created and sells an addon for an itho CVE fan. This makes it con
 
 left to right, nightmode, daymode, manual set and auto humidity mode.
 
-![example 5](images-wiki/example5.png?raw=true)
-![example 6](images-wiki/example6.png?raw=true)
+![example 5](images-wiki/example7.png?raw=true)
+![example 6](images-wiki/example5.png?raw=true)
+![example 7](images-wiki/example6.png?raw=true)
 
-left to right, 24 hours humidity graph and free manual setting
+left to right, co2 venting active, 24 hours humidity graph and free manual setting
 
 Features
 1. Depending on the speed the fan will show 1 of 7 images. 
@@ -40,7 +41,7 @@ Features
 	* It will show a popup screen you can use to manually set a value between 20 and 254
 	* If it happens to be the low/medium/high (+-5), this button will show green
 	* Any other value will make the setup/wrench button green
-5. It had a humidity icon
+5. It has a humidity icon
 	* Between 40 and 60% (recommended values for health) it will be green, else gray
 	* small 5 dotted indicator (for every 20%)
 	* Pressing it will show a 24 hour humidity graph (new!)
@@ -48,27 +49,23 @@ Features
 	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a sun, it's in day mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a tornado, it spinned up for humidity. If the icon is green with according speed. If gray a manual change had been made (timer button will also be green).
-7. It has an auto settings
+7. It has an auto setting/control
 	* All configurable (incl. disabling) by rule variables
 	* Day and Night setting for fan speed
 	* Automatic spin up while/after cooking/showering (and prevent on/off loops) 
 	* Reset of manual input to default day/night speed
+8. It can (optionally) respond to CO2 values/senor
+	* When a CO2 sensor (item) is present (best is name like 'CO2' or ending with ('_CO2') it will use it. If not, the functionality will be ignored.
+	* Add a correction line by giving two point. A low and high combination of CO2 PPM and fan speed.
+	* When 800 ppm=100 and 1200 ppm=200 it will: 800 ppm=100, 1000ppm=150, 1200 ppm=200, >1200 ppm=200
+	* Lowest value is determined by day/ night setting. The set line will continue, so 600 ppm=75 except if the lowest day/night value=80. Than that's set.
+	* To prevent 'oversteering' a time treshold and deviation can be set. So for instance it corrects once a five minutes as long as new value is below treshold of 10
+	* This will allow response to CO2 levels AND manual settings as usual (i.e. pressing high) and prevents continious small changes every minute.
 
 ## Worklist
-* 1.0 - Released
-* 1.1 - Current - Work in progress
-	
-It new at the moment, so work in progress. Expect changes. 
-* done in 1.0 - Next addition will be a rule to automaticly control fan when showering or at day/night.
-* done in 1.0 - A popup graph with 24 hours humidity and/or speed.
-* done in 1.0 - The current setup uses the web api with a refresh of 30 seconds. Command is sent immediatelly but the widget is delayed on updating.
-* done in 1.1 - Showing timer countdown (maybe in circle around 'fan' axis)
-* Press day/night icon to restore normal day/night settings?
-* split day in morning/afternoon/evening?
-* done in 1.1 - humidity level in indicator (5 dots/ every 20%)
-* The API uses three queries on the url and I combined them in one thing. Maybe openHAB processes all url's three times now. Accept this or split them?
-* done in 1.1 - Bug, remote timer 'overidden' by autorule before end of timer
-* CSS issue with mobile mode (openHab app), probably because of min sizes. Testing with full screen chrome in desktop mode.
+Using the [releases](https://github.com/Supersjellie/openhab-itho-fan/releases) in github now
+Using the [issues](https://github.com/Supersjellie/openhab-itho-fan/issues) in github now
+(I'm not using branches for work in progress (i.e. latest milestone), so download a release for a stable version)
 
 ## Preperation
 1. Have an openhab installation :grin:
@@ -145,12 +142,14 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* Option 1 : Only set the equipment items (don't change seperate items)
 	* Option 2 : Only set (all!) the seperate items (don't set equipment item)
 	* Set values for low/medium/high speeds (same as in GUI of add-on)
-3. You're done
+3. If you have an CO2 sensor (optional)
+	* Set the item for the CO2 sensor.	
+4. You're done
 	* Press L, M or H button to change speed to low, medium or high setting
 	* Press hourglass to temporally increase speed (accoding to high setting and timer1)
 	* Press wrench to set another speed (slider will show)
 	* Icons will change according to settings, remember. The fan will respond immediatelly, the GUI with a 30 second delay (according to thing update frequency)
-4. If you installed the fan rule, you can change automation settings at the start of the script
+5. If you installed the fan rule, you can change automation settings at the start of the script
 	* scriptName : scriptname is used in logging
 	* group : Used to find fan items
 	* nightSpeed : Nightspeed, integer value or low/medium/high
@@ -163,11 +162,19 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* delayFanStart : Minutes to start fan AFTER humidity raises over treshold
 	* delayFanEnd : Minutes to keep fan turning after humidity fan start (ignored when speed set to timer1/timer2/timer3)
 	* delayFanNextStart : Minutes wait for next start
+6. If you have an CO2 sensor these are the addional settings at the start of the script
+	* co2LowPpm : start point ppm. Above this value fan will increase speed
+	* co2LowSpeed : start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
+	* co2HighPpm : end point ppm. Above this value fan will no longer increase speed anymore
+	* co2HighSpeed : end point speed. This is also the maximum for CO2 ventilation
+	* correctionMinutes : minimum time for corrections on CO2 adjustments
+	* correctionTreshold :  when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
 
 ## Versions
-0.9 Initial version
-1.0 First release (added humidity graph, auto setting rule and layout improvements)
-1.1 Second release (added humidity indicator, remaining time for timers)
+* 0.9 Initial version
+* 1.0 First release (added humidity graph, auto setting rule and layout improvements)
+* 1.1 Second release (added humidity indicator, remaining time for timers)
+* 1.2 Work in progress: CO2 sensor
 	
 ## Code
 The code is pretty standard. Things you might find interesting for changes

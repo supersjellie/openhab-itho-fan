@@ -17,7 +17,7 @@ actions:
       script: >-
         /*
 
-        Fan script version 1.1
+        Fan script version 1.2
 
 
         (1.0) Creates (if needed) a mode item under group fan (naming according to script name)
@@ -26,11 +26,13 @@ actions:
 
         (1.0) Updates speed/timer of fan
 
-        (1.0) change settings according to your situation (speed can be set as number or 'low/medium/high')
+        (1.0) change settings according to your situation (speed can be set as number)
 
         (1.1) calculate/create fanRemainTime and fanMaxTime item (in order for the widget to show this)
 
         (1.1) easier debug messages/ improved null check for items with NULL value (instead of null)
+
+        (1.2) added CO2 regulation, removed setting as low/medium/high. Only numbers (needed for checks/compares)
 
         */
 
@@ -41,17 +43,21 @@ actions:
 
         var group=scriptName;//default scriptname also used to find fan items
 
-        var nightSpeed=20;//nightspeed, integer value or low/medium/high
 
-        var daySpeed=60;//dayspeed, integer value or low/medium/high
+        //day/night
 
-        var humidSpeed=120;//speed for ventilation when humid or low/medium/high or timer1/timer2/timer3
+        var nightSpeed=20;//nightspeed, integer value
+
+        var daySpeed=80;//dayspeed, integer value
 
         var dayStart=7;// hour day mode starts (>=)
 
         var nightStart=23;//hour night mode starts (>=)
 
-        var resetMinutes=60;//minutes manual command can reset to default day/night settings (-1 disable)
+
+        //humidity
+
+        var humidSpeed=160;//speed for ventilation when humid
 
         var humidityTreshold=10;// %humidity rise to start
 
@@ -62,9 +68,29 @@ actions:
         var delayFanNextStart=30;//minutes wait for next start
 
 
+        //co2
+
+        var co2LowPpm=900;//start point ppm. Above this value fan will increase speed
+
+        var co2LowSpeed=80;//start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
+
+        var co2HighPpm=1200;//end point ppm. Above this value fan will no longer increase speed anymore
+
+        var co2HighSpeed=160;//end point speed. This is also the maximum for CO2 ventilation
+
+
+        //auto reset
+
+        var resetMinutes=30;//minutes, when passed manual command can reset to default day/night settings (-1 disable)
+
+        var correctionMinutes=5;//minimum time for corrections on CO2 adjustments
+
+        var correctionTreshold=10;// when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
+
+
         //init
 
-        var debugMode=false;//log debug as info (easier than changing loglevel in karaf)
+        var debugMode=true;//log debug as info (easier than changing loglevel in karaf)
 
         console.info(scriptName+"script started");
 
@@ -89,6 +115,11 @@ actions:
         var fanTime=searchFirstItem(group,"timer_time");
 
 
+        //optional, can be null!
+
+        var co2=searchBestItem(null,"CO2");
+
+
         //create in mem vars (script object is cached in openHAB). Will be erased on script save/change
 
         if (isNaN(this.ruleChange)){
@@ -96,8 +127,9 @@ actions:
           //did the rule change the value?
           this.ruleChange=false;
           
-          //last update of speed (-24 allows changes now)
+          //last update/correction of speed (-24 allows changes now)
           this.lastUpdate=now.minusHours(24);
+          this.lastCorrection=now.minusHours(24);
           
           //last hour lowest humidity was calculated
           this.baselineHour=-1;
@@ -117,7 +149,6 @@ actions:
         //triggered by cron or currentspeed item?
 
         var valueTrigger=(!isNaN(this.event));
-
 
 
         if (valueTrigger){
@@ -152,7 +183,13 @@ actions:
         }else {
           //trigger is CRON job/time based
           debug("trigger=cron");
-          
+
+          //in case trigger is missed (usually because rule was already running on timer)
+          if (!isNaN(fanCommand.state) && fanCommand.state!='' && fanCommand.state!='X'){
+            //erase button for openhab (itho addon won't respond)
+            fanCommand.sendCommand('X');
+          }
+
 
           //check remote
           if(fanTime.state>0 && now.isAfter(lastUpdate)){
@@ -168,6 +205,11 @@ actions:
           let changeAllowed=true;
           if (resetMinutes>0){
             changeAllowed=now.isAfter(lastUpdate.plusMinutes(resetMinutes));
+          }
+          
+          let correctionAllowed=true;
+          if (correctionMinutes>0){
+            correctionAllowed=now.isAfter(lastCorrection.plusMinutes(correctionMinutes));
           }
           
           //current hour
@@ -266,44 +308,83 @@ actions:
 
           //init auto speedchange
           let mode=null;
+          let baseSpeed=null;
           let speed=null;
           let command=null;
 
           //init speedchange check
           let currentSpeed=fanSpeed.state;
           let checkSpeed=null;
+          
+          //baseline day/night
+          if (day){
+            baseSpeed=daySpeed;
+            mode=1;
+          }else{
+            baseSpeed=nightSpeed;
+            mode=0;
+          }
+          
 
-          if ((humididyFanOn) && Number.isInteger(humidSpeed)){
+          //calc co2-speed
+          var co2Speed=0;//default=off
+          if (co2!=null){
+            //co2 sensor found
+            let co2Value=parseInt(co2.state);
+          
+            console.info("co2 "+co2Value);
+          
+            if (co2Value>=co2HighPpm){
+              //max co2 correction
+              co2Speed=co2HighPpm;
+            } else {
+              //increasing correction, calc lineair between low & high
+              co2Speed=parseInt(co2LowSpeed+(co2HighSpeed-co2LowSpeed)*(co2Value-co2LowPpm)/(co2HighPpm-co2LowPpm));
+            }
+            if (co2Speed<baseSpeed){
+              //disable
+              co2Speed=0;
+            }
+            console.info("co2 "+co2Value+" co2speed "+co2Speed);
+          }
+          
+          if (humididyFanOn && humidSpeed>co2Speed && humidSpeed>baseSpeed){
+            //humidity and speed is larger than currentspeed
             speed=humidSpeed;
             mode=2;
-          } else if (humididyFanOn){
-            command=humidSpeed;
-            mode=2;
           } else if (humidityRunning){
-            checkSpeed=humidSpeed;//don't set (allow manual intervention), only check
+            //don't set (allow manual intervention), only check
+            checkSpeed=humidSpeed;
             mode=2;
-          } else if (day && Number.isInteger(daySpeed)){
-            speed=daySpeed;
-            mode=1;
-          }else if (day){
-            command=daySpeed;
-            mode=1;
-          } else if (Number.isInteger(nightSpeed)){
-            speed=nightSpeed;
-            mode=0;
-          }else {
-            command=nightSpeed;
-            mode=0;
+          } else if (co2Speed> baseSpeed){
+            //co2 correction and larger than currentspeed
+            speed=co2Speed;
+            mode=3;
+          } else {
+            //use baseline
+            speed=baseSpeed;
           }
           
           if (checkSpeed==null){
             checkSpeed=speed;
           }
+          //safety
+          if (speed<20){
+            //never turn fan off
+            speed=20;
+          }
 
-          debug("day="+day+" speed="+speed+" command="+command+" mode="+mode+" "+"change "+changeAllowed+" sp="+ parseInt(currentSpeed)+" mode="+mode+" humid="+humidFanStart);
+          debug("day="+day+" speed="+speed+" mode="+mode+" "+"change "+changeAllowed+" correction "+correctionAllowed + " sp="+ parseInt(currentSpeed)+" mode="+mode+" humid="+humidFanStart);
 
           //only update items if values are calculated and changed (else rule will trigger itself creating loops)
-          if (!changeAllowed && (currentSpeed!=speed || command!=null)){
+          if (!changeAllowed && correctionAllowed && currentSpeed!=speed && mode==3 && (Math.abs(currentSpeed-speed)<correctionTreshold || speed>currentSpeed)){
+            //change not allowed, but correction is!
+            fanSpeed.sendCommand(speed);
+            currentSpeed=speed;//it will/should become this
+            ruleChange=true;
+            lastCorrection=now;
+            console.info("Writing speed "+speed+" (CO2 correction)");    
+          }else if (!changeAllowed && (currentSpeed!=speed || command!=null)){
             //at the moment automatic changes are not allowed (and change is requested), log
             debug("no changes allowed");    
           } else if (!changeAllowed){
@@ -313,19 +394,26 @@ actions:
             currentSpeed=speed;//it will/should become this
             ruleChange=true;
             lastUpdate=now;
-            console.info("Writing speed "+fanSpeed);
+            lastCorrection=now;
+            console.info("Writing speed "+speed);
           } else if (command!=null){
+            //at the moment no commands will be generared, keep it for future changes?
             fanCommand.sendCommand(command);
             ruleChange=true;
             lastUpdate=now;
+            lastCorrection=now;
             console.info("writing command "+command);
           }
           
+          
           //mode active/applied?
-          if (mode!=null && checkSpeed==currentSpeed){
+          if (mode!=null && Math.abs(checkSpeed-currentSpeed)<correctionTreshold){
             mode+=10;
           }
 
+            console.info("checking "+checkSpeed+" <?> "+currentSpeed+" mode "+mode);
+
+          
           //mode changed, write
           if (mode!=null && mode!=parseInt(fanMode.state)){
             fanMode.postUpdate(mode);
@@ -439,6 +527,57 @@ actions:
         }
 
 
+        //search items with (optional) group and name (return null or item)
+
+        function searchBestItem(group, name){
+          let list=searchAllItem(group,name);
+          if (list.length==1){
+            return list[0];
+          } else if (list.length==0){
+            return null;
+          }else {
+            
+            //exact match or shortest endswith _name
+            name=name.toLowerCase();
+            let best="";
+            for (let n of list){
+              if (n.name.toLowerCase()==name){
+                //exact match, always wins
+                return n;
+              } else if (n.name.toLowerCase().endsWith("_"+name) && (best=="" || n.name.length<best.name.length)){
+                //shorter is better
+                best=n;
+              }
+            }
+            if (best!=""){
+              return best;
+            }
+            
+            //shortest endswith name
+            best="";
+            for (let n of list){
+              if (n.name.toLowerCase().endsWith(name) && (best=="" || n.name.length<best.length)){
+                //shorter is better
+                best=n;
+              }
+            }
+            if (best!=""){
+              return best;
+            }
+            
+            //shortest contains name
+            best=list[0];
+            for (let n of list){
+              if (n.name.length<best.name.length){
+                //shorter is better
+                best=n;
+              }
+            }
+            return best;
+          }
+        }
+
+
 
         //search items with (optional) group and name (return list)
 
@@ -453,6 +592,23 @@ actions:
             }
           ,search);
         }
+
+
+        //search items with (optional) group and name (return list)
+
+        function searchAllItem(group, name){
+          let search=name;
+          if (group!=null && group!=""){
+            search=group+"_"+name;
+          }
+          search=search.toLowerCase();
+          return items.getItems().filter(
+            function(item){
+              return (item.name.toLowerCase().contains(this));    
+            }
+          ,search);
+        }
+
 
 
         function debug(text){

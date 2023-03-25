@@ -1,6 +1,6 @@
 uid: widget_fan
 tags:
-  - v1.1
+  - v1.2
 props:
   parameters:
     - context: item
@@ -8,6 +8,13 @@ props:
       description: Fan group
       label: Fan group
       name: fan
+      required: false
+      type: TEXT
+    - context: item
+      default: ""
+      description: CO2
+      label: CO2
+      name: co2
       required: false
       type: TEXT
     - context: item
@@ -81,28 +88,15 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Feb 20, 2023, 7:00:28 PM
+timestamp: Mar 25, 2023, 6:09:31 PM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
-  stylesheet: >
-    .my_button {
-      height: 22px !important;
-      min-height: 22px !important;
-      width: 26px !important;
-      min-width: 26px !important;
-      padding: 1px 0px 0px 0px;
-      margin: 0px 0px 0px 0px;
-      inset: 0px 0px 0px 0px;
-      line-height: 16px;
-      font-size: 14px; 
-    }
 slots:
   default:
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: = items[props.fan+props.speed].state<=30
         style:
           background-image: url(/static/fan-off.png)
           background-size: 105px
@@ -112,10 +106,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: = items[props.fan+props.speed].state<=30
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: =items[props.fan+props.speed].state>30 && items[props.fan+props.speed].state<=70
         style:
           background-image: url(/static/fan-on-0.png)
           background-size: 105px
@@ -125,10 +119,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: =items[props.fan+props.speed].state>30 && items[props.fan+props.speed].state<=70
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: =items[props.fan+props.speed].state>70 && items[props.fan+props.speed].state<=110
         style:
           background-image: url(/static/fan-on-1.png)
           background-size: 105px
@@ -138,10 +132,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: =items[props.fan+props.speed].state>70 && items[props.fan+props.speed].state<=110
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: =items[props.fan+props.speed].state>110 && items[props.fan+props.speed].state<=150
         style:
           background-image: url(/static/fan-on-2.png)
           background-size: 105px
@@ -151,10 +145,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: =items[props.fan+props.speed].state>110 && items[props.fan+props.speed].state<=150
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: = items[props.fan+props.speed].state>150 && items[props.fan+props.speed].state<=190
         style:
           background-image: url(/static/fan-on-3.png)
           background-size: 105px
@@ -164,10 +158,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: = items[props.fan+props.speed].state>150 && items[props.fan+props.speed].state<=190
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: = items[props.fan+props.speed].state>190 && items[props.fan+props.speed].state<=230
         style:
           background-image: url(/static/fan-on-4.png)
           background-size: 105px
@@ -177,10 +171,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: = items[props.fan+props.speed].state>190 && items[props.fan+props.speed].state<=230
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
-        visible: = items[props.fan+props.speed].state>230
         style:
           background-image: url(/static/fan-on-5.png)
           background-size: 105px
@@ -190,9 +184,10 @@ slots:
           position: absolute
           top: 4px
           width: 105px
+        visible: = items[props.fan+props.speed].state>230
     - component: f7-icon
       config:
-        f7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sun_max_fill' : 'tornado' "
+        f7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'tornado': 'wind' "
         size: 25px
         style:
           color: "= items[props.fan+props.mode].state>=10 ? '#4cd964': 'gray'"
@@ -201,36 +196,71 @@ slots:
           top: 5px
     - component: oh-button
       config:
+        class:
+          - display-flex
+          - justify-content-flex-center
+          - align-items-center
+        iconColor: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'gray' : 'green'"
         iconF7: drop_fill
         iconSize: 25px
-        iconColor: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'gray' : 'green'"
+        popoverOpen: ='.humidityPopover'
         style:
           left: 3px
           position: absolute
           top: 2px
           width: 25px
-        class:
-          - display-flex
-          - justify-content-flex-center
-          - align-items-center
-        popoverOpen: ='.humidityPopover'
     - component: Label
       config:
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
-          transform: rotate(180deg)
           color: "#4cd964"
           font-size: 9px
-          position: absolute!important
-          left: 24px!important
-          top: 6px!important
-          text-align: center
-          width: 5px
           height: 20px
-          word-break: break-word
+          left: 24px!important
           line-height: 4px
+          position: absolute!important
+          text-align: center
+          top: 6px!important
+          transform: rotate(180deg)
+          width: 5px
+          word-break: break-word
         text: "='▪'.repeat(Math.round(items[props.fan+props.humidity].state/20)) "
+    - component: oh-button
+      config:
+        class:
+          - display-flex
+          - justify-content-flex-center
+          - align-items-center
+        iconColor: "= props.co2=='' ? 'gray' : items[props.co2].state.split(' ')[0]<1000 ? 'green' : items[props.co2].state.split(' ')[0]<1400 ? 'yellow' : 'red'  "
+        iconF7: smoke_fill
+        iconMaterial_off: co2
+        iconSize: 17px
+        style:
+          left: 3px
+          position: absolute
+          top: 85px
+          width: 25px
+        visible: =(props.co2!='')
+    - component: Label
+      config:
+        style:
+          --f7-card-bg-color: rgba(0,0,0,0.0)
+          --f7-card-box-shadow: none
+          color: "#4cd964"
+          font-size: 9px
+          height: 20px
+          left: 24px!important
+          line-height: 4px
+          position: absolute!important
+          text-align: center
+          top: 90px!important
+          transform: rotate(180deg)
+          width: 5px
+          word-break: break-word
+        atext: =items[props.co2].state.split(' ')[0]/200
+        text: "='▪'.repeat(props.co2=='' ? 0 : items[props.co2].state<400 ? 0 : items[props.co2].state.split(' ')[0]>1400 ? 5 :  Math.round( (items[props.co2].state.split(' ')[0]-400)/200)  )"
+        visible: =(props.co2!='')
     - component: Label
       config:
         style:
@@ -246,16 +276,15 @@ slots:
         text: = Number.parseFloat((items[props.fan+props.speed].state)/25.4).toFixed(0)
     - component: f7-gauge
       config:
-        
+        borderBgColor: transparant
+        borderColor: red
+        borderWidth: 6
+        size: 35
         style:
+          left: 60px
           position: absolute
           top: 42px
-          left: 60px
-        size: 35
         value: "= items[props.fan+props.maxtime].state==0 ? 0 : 1.0*(items[props.fan+props.remaintime].state)/items[props.fan+props.maxtime].state"
-        borderColor: darkgreen
-        borderWidth: 6
-        borderBgColor: transparant
     - component: f7-row
       config:
         class:
@@ -265,24 +294,27 @@ slots:
         style:
           flex-wrap: nowrap
           height: auto
+          left: 5px
           margin-top: 5px
           overflow: hidden
-          white-space: nowrap
-          width: auto
           position: absolute
           top: 112px
-          left: 5px
+          white-space: nowrap
+          width: auto
         stylesheet: >
           .my_button {
             height: 22px !important;
             min-height: 22px !important;
             width: 26px !important;
             min-width: 26px !important;
-            padding: 1px 0px 0px 0px;
+            padding: 0px 0px 0px 0px;
             margin: 0px 0px 0px 0px;
             inset: 0px 0px 0px 0px;
-            line-height: 16px;
+            line-height: 16px!important;
             font-size: 14px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
           }
         visible: true
         width: auto
@@ -383,12 +415,12 @@ slots:
                       - my_button
                     color: "= items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? 'green' : 'gray'"
                     fill: "= items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? true : false"
-                    outline: true
-                    round: false
-                    small: true
                     iconF7: wrench
                     iconSize: 16px
+                    outline: true
                     popoverOpen: ='.speedPopover'
+                    round: false
+                    small: true
           - component: f7-col
             config:
               class:
@@ -410,11 +442,11 @@ slots:
                       - my_button
                     color: "= (items[props.fan+props.mode].state % 10)==2 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? 'green' : 'gray'"
                     fill: "=  (items[props.fan+props.mode].state % 10)==2 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? true : false"
+                    iconF7: hourglass
+                    iconSize: 20px
                     outline: true
                     round: false
                     small: true
-                    iconF7: hourglass
-                    iconSize: 20px
     - component: f7-popover
       config:
         class: ='speedPopover'
