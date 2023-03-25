@@ -43,7 +43,7 @@ Features
 	* Any other value will make the setup/wrench button green
 5. It has a humidity icon
 	* Between 40 and 60% (recommended values for health) it will be green, else gray
-	* small 5 dotted indicator (for every 20%)
+	* small 5 dots indicator (for every 20%)
 	* Pressing it will show a 24 hour humidity graph (new!)
 6. It had a auto control icon
 	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
@@ -56,6 +56,8 @@ Features
 	* Reset of manual input to default day/night speed
 8. It can (optionally) respond to CO2 values/senor
 	* When a CO2 sensor (item) is present (best is name like 'CO2' or ending with ('_CO2') it will use it. If not, the functionality will be ignored.
+	* small 5 dots indicator (600,800,1000,1200,1400 ppm)
+	* icon, green until 1000ppm, yellow until 1400 ppm, red above
 	* Add a correction line by giving two point. A low and high combination of CO2 PPM and fan speed.
 	* When 800 ppm=100 and 1200 ppm=200 it will: 800 ppm=100, 1000ppm=150, 1200 ppm=200, >1200 ppm=200
 	* Lowest value is determined by day/ night setting. The set line will continue, so 600 ppm=75 except if the lowest day/night value=80. Than that's set.
