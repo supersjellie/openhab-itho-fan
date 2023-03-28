@@ -33,7 +33,7 @@ Features
 2. It has a low, medium, high button. 
 	* This will set the corresponding speed (as set in the itho addon)
 	* The chosen button will light up green (also when it's set by the remote!)
-3. It had a timer button
+3. It has a timer button
 	* This will set the fan to the high setting for a limited time (as set in the itho addon)
 	* As long as the timer is active, the button will light up green (also when it's set by the remote)
 	* (although it's the high setting, the high button will remain gray in this case)
@@ -41,11 +41,11 @@ Features
 	* It will show a popup screen you can use to manually set a value between 20 and 254
 	* If it happens to be the low/medium/high (+-5), this button will show green
 	* Any other value will make the setup/wrench button green
-5. It has a humidity icon
+5. It has a humidity icon (optional)
 	* Between 40 and 60% (recommended values for health) it will be green, else gray
 	* small 5 dots indicator (for every 20%)
 	* Pressing it will show a 24 hour humidity graph (new!)
-6. It had a auto control icon
+6. It has a auto control icon
 	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a sun, it's in day mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a tornado, it spinned up for humidity. If the icon is green with according speed. If gray a manual change had been made (timer button will also be green).
@@ -135,8 +135,10 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 1. Add a new widget to your dashboard/page
 2. Set the props and save
 	* Easiest is selecting only the equipment (items will be found on default names)
-	* If you chose other names for the items, you can also select the seperate items
+	* If you choose other names for the items, you can also select the seperate items
 	* set low, medium and high according to the values in the itho addon system setup
+	* (optional) set item for humidity and/or co2 sensor
+	* (optional) if you own a co2 sensor, set the according item (it expects 400-1500 ppm values)
 
 ## Usage
 1. Add the widget 'widget_fan' to your dashboard or page. Remember it's intended for tiled dashboards (so small)
@@ -144,14 +146,16 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* Option 1 : Only set the equipment items (don't change seperate items)
 	* Option 2 : Only set (all!) the seperate items (don't set equipment item)
 	* Set values for low/medium/high speeds (same as in GUI of add-on)
-3. If you have an CO2 sensor (optional)
-	* Set the item for the CO2 sensor.	
-4. You're done
+3. If you have a humidity sensor (optional)
+	* Set the item for the humidity sensor (it expects 0-100% values).
+4. If you have an CO2 sensor (optional)
+	* Set the item for the CO2 sensor (it expects 400-1500 ppm values).
+5. You're done
 	* Press L, M or H button to change speed to low, medium or high setting
 	* Press hourglass to temporally increase speed (accoding to high setting and timer1)
 	* Press wrench to set another speed (slider will show)
 	* Icons will change according to settings, remember. The fan will respond immediatelly, the GUI with a 30 second delay (according to thing update frequency)
-5. If you installed the fan rule, you can change automation settings at the start of the script
+6. If you installed the fan rule, you can change automation settings at the start of the script
 	* scriptName : scriptname is used in logging
 	* group : Used to find fan items
 	* nightSpeed : Nightspeed, integer value or low/medium/high
@@ -164,7 +168,7 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* delayFanStart : Minutes to start fan AFTER humidity raises over treshold
 	* delayFanEnd : Minutes to keep fan turning after humidity fan start (ignored when speed set to timer1/timer2/timer3)
 	* delayFanNextStart : Minutes wait for next start
-6. If you have an CO2 sensor these are the addional settings at the start of the script
+7. If you have an CO2 sensor these are the addional settings at the start of the script
 	* co2LowPpm : start point ppm. Above this value fan will increase speed
 	* co2LowSpeed : start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
 	* co2HighPpm : end point ppm. Above this value fan will no longer increase speed anymore
@@ -206,4 +210,5 @@ The code is pretty standard. Things you might find interesting for changes
 11. Reason is the script object is reused. You can take advantage of this by placing variables on the this object. They will become in memory vars that can be used over executions
 12. The rule it triggered by CRON and change on current_speed. The latter is set by the rule so a bit of logic is present to prevent execution loops
 13. The rule also helps the GUI by resetting the command item. If it's 'low' it means low has been sent to addon (and applied) but the result had not been read by openHAB (max 30 secs delay). When applied it will be 'X'
-	
+14. It seems not all components in the widget respond the same to optional items. Sometimes a (prop.xxx), (prop.xxx=='') or (prop.xxx==undefined) get the right result
+15. Do them all, if an optional prop is somewhere in de widget not converted the internal code will crash making it's behaviour (update) unreliable.	

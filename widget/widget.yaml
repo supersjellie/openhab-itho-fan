@@ -11,6 +11,12 @@ props:
       required: false
       type: TEXT
     - context: item
+      description: Item with humidity
+      label: humidity
+      name: humidity
+      required: false
+      type: TEXT
+    - context: item
       default: ""
       description: CO2
       label: CO2
@@ -29,13 +35,6 @@ props:
       description: Item with timer
       label: timer
       name: timer
-      required: false
-      type: TEXT
-    - context: item
-      default: _humidity
-      description: Item with humidity
-      label: humidity
-      name: humidity
       required: false
       type: TEXT
     - context: item
@@ -88,7 +87,7 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Mar 25, 2023, 6:09:31 PM
+timestamp: Mar 28, 2023, 8:18:48 AM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
@@ -200,10 +199,11 @@ slots:
           - display-flex
           - justify-content-flex-center
           - align-items-center
-        iconColor: "= items[props.fan+props.humidity].state<40 || items[props.fan+props.humidity].state>60 ? 'gray' : 'green'"
+        iconColor: "= !props.humidity ? 'gray' : items[props.humidity].state<40 || items[props.humidity].state>60 ? 'gray' : 'green'"
         iconF7: drop_fill
         iconSize: 25px
         popoverOpen: ='.humidityPopover'
+        visible : "= (props.humidity==undefined) ? false : true"
         style:
           left: 3px
           position: absolute
@@ -225,7 +225,7 @@ slots:
           transform: rotate(180deg)
           width: 5px
           word-break: break-word
-        text: "='▪'.repeat(Math.round(items[props.fan+props.humidity].state/20)) "
+        text: "='▪'.repeat(!props.humidity ? 0 : Math.round(items[props.humidity].state/20)) "
     - component: oh-button
       config:
         class:
@@ -513,11 +513,12 @@ slots:
                 - component: oh-time-series
                   config:
                     areaStyle1: {}
-                    item: =props.fan+props.humidity
+                    item: "= props.humidity ? props.humidity: null"
                     itemStyle:
                       color: rgb(50, 200, 50)
                     name: Temperature
                     type: line
+                    visible: false
               title:
                 - component: oh-chart-title
                   config:
