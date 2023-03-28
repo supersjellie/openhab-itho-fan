@@ -171,25 +171,38 @@ actions:
         }
 
 
-        //triggered by cron or currentspeed item?
+        //triggered by cron, currentspeed item or command?
 
-        var valueTrigger=(!isNaN(this.event) || this.event!=undefined);
+        var valueTrigger=isAvailable(this.event);
+
+        var resetTrigger=false;
+
+
 
         //always reset command if not X (displays buttons in widget right)
 
-        if (!isNaN(fanCommand.state) && fanCommand.state!='' && fanCommand.state!='X'){
+        if (isAvailable(fanCommand.state) && fanCommand.state!='X'){
           //it is a button
           debug("Reset command to X");
+          
+          if (fanCommand.state=='reset'){
+            //special widget command
+            resetTrigger=true;
+          }
 
           //erase button for openhab (itho addon won't respond)
           fanCommand.sendCommand('X');
 
-        } 
+        }
+
+
+        debug("valueTrigger="+valueTrigger+" event "+this.event+" command="+fanCommand.state+" resetTrigger "+resetTrigger);
+
 
 
         //check for 'unexpected' change of fanspeed
 
-        if (valueTrigger && ruleSpeed!="" && Number.isInteger(ruleSpeed) && fanSpeed.state==ruleSpeed){
+        if (valueTrigger && ruleSpeed!="" && Number.isInteger(ruleSpeed) && fanSpeed.state!=ruleSpeed){
           //we got a last set value (previous run), but current speed is different. i.e. something else than rule changed it (too)
           debug("ruleChange reset "+fanSpeed.state+"!="+ruleSpeed);
           ruleChange=false;
@@ -202,27 +215,25 @@ actions:
           //value changed by rule itself. Reset and ignore
           debug("trigger=rule");
           ruleChange=false;
-        }else if (valueTrigger){
+        }else if (valueTrigger && !resetTrigger){
           //triggered by external factor, press on remote, dashboard, fan GUI. 
           debug("trigger=external");
           
-          if (!isNaN(fanMode.state) && fanMode.state>=10){
-            //make active mode inactive
+          if (isAvailable(fanMode.state) && fanMode.state>=10){
+            //make active mode inactive (except if it's the reset->X)
             fanMode.postUpdate(fanMode.state % 10);
           }
+          
          
           //Allow it by setting lastUpdate (this block corrections by rules for a period)
           lastUpdate=now;
         }else {
           //trigger is CRON job/time based
-          debug("trigger=cron");
-
-          //in case trigger is missed (usually because rule was already running on timer)
-          if (!isNaN(fanCommand.state) && fanCommand.state!='' && fanCommand.state!='X'){
-            //erase button for openhab (itho addon won't respond)
-            fanCommand.sendCommand('X');
+          if (resetTrigger){
+            debug("dag/night reset"); 
+          }else {
+            debug("trigger=cron");
           }
-
 
           //check remote
           if(fanTime.state>0 && now.isAfter(lastUpdate)){
@@ -283,7 +294,10 @@ actions:
             (large) negative number. Counting down to (possible) restarting moment
             -1000-delayFanNextStart: Done. Waiting for restart (cycle repeats)
           */
-          if (humidFanStart<=-1000 && humidFanStart>-1000-delayFanNextStart){
+          if (resetTrigger){
+            //force end of humidity cycle AND/OR reset it to wait time (so it won't reactivate instantly)
+            humidFanStart=-1000;
+          }else if (humidFanStart<=-1000 && humidFanStart>-1000-delayFanNextStart){
             //wait for next allowed start
             humidFanStart--;
             if (timerMode){
@@ -379,7 +393,14 @@ actions:
             debug("co2 "+co2Value+" co2speed "+co2Speed);
           }
           
-          if (humididyFanOn && humidSpeed>co2Speed && humidSpeed>baseSpeed){
+          if (resetTrigger){
+            //forced reset on day/night setting
+            changeAllowed=true;
+            speed=baseSpeed;
+            
+            //set wait time for auto rule (so it will keep this value until timeout)
+            lastUpdate=now;
+          }else if (humididyFanOn && humidSpeed>co2Speed && humidSpeed>baseSpeed){
             //humidity and speed is larger than currentspeed
             speed=humidSpeed;
             mode=2;
@@ -452,10 +473,10 @@ actions:
           }
           
           //reset nulls on new items
-          if (isNaN(fanRemainTime.state)){
+          if (!isAvailable(fanRemainTime.state)){
             fanRemainTime.postUpdate(0);
           }
-          if (isNaN(fanMaxTime.state)){
+          if (!isAvailable(fanMaxTime.state)){
             fanMaxTime.postUpdate(0);
           }
 
@@ -498,6 +519,7 @@ actions:
             fanRemainTime.postUpdate(0);
 
           }
+
 
           
 
@@ -639,6 +661,11 @@ actions:
               return (item.name.toLowerCase().contains(this));    
             }
           ,search);
+        }
+
+
+        function isAvailable(item){
+          return item!=null && item!=undefined && item!="";
         }
 
 

@@ -49,6 +49,7 @@ Features
 	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a sun, it's in day mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a tornado, it spinned up for humidity. If the icon is green with according speed. If gray a manual change had been made (timer button will also be green).
+	* It can be pressed to restore default day/night value
 7. It has an auto setting/control
 	* All configurable (incl. disabling) by rule variables
 	* Day and Night setting for fan speed
@@ -168,6 +169,7 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* delayFanStart : Minutes to start fan AFTER humidity raises over treshold
 	* delayFanEnd : Minutes to keep fan turning after humidity fan start (ignored when speed set to timer1/timer2/timer3)
 	* delayFanNextStart : Minutes wait for next start
+	* humidityItem : When empty it will search for the default name, if you want you can give the name of your item
 7. If you have an CO2 sensor these are the addional settings at the start of the script
 	* co2LowPpm : start point ppm. Above this value fan will increase speed
 	* co2LowSpeed : start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
@@ -175,6 +177,7 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* co2HighSpeed : end point speed. This is also the maximum for CO2 ventilation
 	* correctionMinutes : minimum time for corrections on CO2 adjustments
 	* correctionTreshold :  when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
+	* co2Item : When empty it will search for the default name, if you want you can give the name of your item
 
 ## Versions
 * 0.9 Initial version

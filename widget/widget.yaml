@@ -87,7 +87,7 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Mar 28, 2023, 8:18:48 AM
+timestamp: Mar 28, 2023, 8:22:35 PM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
@@ -184,15 +184,19 @@ slots:
           top: 4px
           width: 105px
         visible: = items[props.fan+props.speed].state>230
-    - component: f7-icon
+    - component: oh-button
       config:
-        f7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'tornado': 'wind' "
-        size: 25px
+        iconF7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'tornado': 'wind' "
+        iconColor: "=(items[props.fan+props.mode].state>=10 && items[props.fan+props.command].state=='X') || items[props.fan+props.command].state=='reset' ? 'green' : 'gray'"
+        iconSize: 25px
+        action: command
+        actionCommand: reset
+        actionItem: = props.fan+props.command
+        
         style:
-          color: "= items[props.fan+props.mode].state>=10 ? '#4cd964': 'gray'"
           left: 122px
           position: absolute
-          top: 5px
+          top: 1px
     - component: oh-button
       config:
         class:
@@ -203,7 +207,7 @@ slots:
         iconF7: drop_fill
         iconSize: 25px
         popoverOpen: ='.humidityPopover'
-        visible : "= (props.humidity==undefined) ? false : true"
+        visible: "= (props.humidity==undefined) ? false : true"
         style:
           left: 3px
           position: absolute
