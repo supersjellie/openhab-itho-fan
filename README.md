@@ -37,26 +37,36 @@ Features
 	* This will set the fan to the high setting for a limited time (as set in the itho addon)
 	* As long as the timer is active, the button will light up green (also when it's set by the remote)
 	* (although it's the high setting, the high button will remain gray in this case)
-4. It had a setup (wrench) button
+4. It has a setup (wrench) button
 	* It will show a popup screen you can use to manually set a value between 20 and 254
 	* If it happens to be the low/medium/high (+-5), this button will show green
 	* Any other value will make the setup/wrench button green
-5. It has a humidity icon (optional)
-	* Between 40 and 60% (recommended values for health) it will be green, else gray
-	* small 5 dots indicator (for every 20%)
-	* Pressing it will show a 24 hour humidity graph (new!)
-6. It has a auto control icon
+5. It has a auto control icon
 	* If it shows a moon, it's in night mode. If the icon is green with according speed. If gray a manual change had been made.
-	* If it shows a sun, it's in day mode. If the icon is green with according speed. If gray a manual change had been made.
+	* If it shows a sunrise, it's in morning mode. If the icon is green with according speed. If gray a manual change had been made.
+	* If it shows a sun, it's in afternoon mode. If the icon is green with according speed. If gray a manual change had been made.
+	* If it shows a sunset, it's in evening mode. If the icon is green with according speed. If gray a manual change had been made.
 	* If it shows a tornado, it spinned up for humidity. If the icon is green with according speed. If gray a manual change had been made (timer button will also be green).
-	* It can be pressed to restore default day/night value
-7. It has an auto setting/control
+	* If it shows a gust of wind, it spinned up for CO2. If the icon is green with according speed. If gray a manual change had been made.
+	* If it shows a hurricane, it spinned up for VOC. If the icon is green with according speed. If gray a manual change had been made.	
+	* If it shows a dark home, it's in away (nobody home) setting. If the icon is green with according speed. If gray a manual change had been made.		
+	* It can be pressed to restore default morning, afternoon, evening or night value
+	* (some options may not be available if you don't have according sensors/items).
+6. It has an auto setting/control
 	* All configurable (incl. disabling) by rule variables
-	* Day and Night setting for fan speed
-	* Automatic spin up while/after cooking/showering (and prevent on/off loops) 
-	* Reset of manual input to default day/night speed
+	* Morning, afternoon, evening, night settings for fan speed
+	* Optionally it can respond/correct humidity, CO2 and VOC levels (see sections below)
+	* Reset of manual input to default day/night speed after timeout
+7. It can (optionally) respond to humidity values/sensor
+	* When a humidity sensor (item) is present (best is name like 'humidity' or ending with ('_humidity') it will use it. You can supply a fixed name
+	* If not, the functionality will be ignored.
+	* small 5 dots indicator (20%,40%,60%,80%,100%)
+	* Icon, 0%-20% red, 20%-40% yellow, 40%-60% green (recommended values for health), 60%-80% yellow and 80%-100% red
+	* Responds to an (set) 'sudden' increase of humidity by increasing fan speed (with a set value) including delay, run and wait timings.
+	* Pressing it will show a 24 hour humidity graph
 8. It can (optionally) respond to CO2 values/senor
-	* When a CO2 sensor (item) is present (best is name like 'CO2' or ending with ('_CO2') it will use it. If not, the functionality will be ignored.
+	* When a CO2 sensor (item) is present (best is name like 'CO2' or ending with ('_CO2') it will use it. You can supply a fixed name
+	* If not, the functionality will be ignored.
 	* small 5 dots indicator (600,800,1000,1200,1400 ppm)
 	* icon, green until 1000ppm, yellow until 1400 ppm, red above
 	* Add a correction line by giving two point. A low and high combination of CO2 PPM and fan speed.
@@ -64,7 +74,22 @@ Features
 	* Lowest value is determined by day/ night setting. The set line will continue, so 600 ppm=75 except if the lowest day/night value=80. Than that's set.
 	* To prevent 'oversteering' a time treshold and deviation can be set. So for instance it corrects once a five minutes as long as new value is below treshold of 10
 	* This will allow response to CO2 levels AND manual settings as usual (i.e. pressing high) and prevents continious small changes every minute.
-
+9. It can (optionally) respond to VOC values/senor
+	* When a VOC sensor (item) is present (best is name like 'VOC' or ending with ('_VOC') it will use it. You can supply a fixed name.
+	* If not found, the functionality will be ignored.
+	* small 5 dots indicator (2,4,6,8,10 ppm)
+	* icon, <=2 ppm green, 2-10 yellow, above 10 red.
+	* Add a correction line by giving two point. A low and high combination of VOC PPM and fan speed.
+	* For now, this is a relative value. 1.1 = 10% more than day/night speed (testing behaviour of sensor in various conditions)
+	* Lowest value is determined by day/ night setting. 
+	* To prevent 'oversteering' a time treshold and deviation can be set. So for instance it corrects once a five minutes as long as new value is below treshold of 10
+	* This will allow response to VOC levels AND manual settings as usual (i.e. pressing high) and prevents continious small changes every minute.
+9. It can (optionally) respond to presence/home item
+	* When a VOC sensor (item) is present (best is name like 'home' or ending with ('_home') it will use it. You can supply a fixed name.
+	* If not found, the functionality will be ignored.
+	* When NOT home it will set the fan during the morning, afternoon and evening at an away speed (night speed will remain the same)
+	* When NOT home it will not respond to humidity, co2 and voc anymore.
+	
 ## Worklist
 Using the [releases](https://github.com/Supersjellie/openhab-itho-fan/releases) in github now
 Using the [issues](https://github.com/Supersjellie/openhab-itho-fan/issues) in github now
@@ -138,8 +163,7 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* Easiest is selecting only the equipment (items will be found on default names)
 	* If you choose other names for the items, you can also select the seperate items
 	* set low, medium and high according to the values in the itho addon system setup
-	* (optional) set item for humidity and/or co2 sensor
-	* (optional) if you own a co2 sensor, set the according item (it expects 400-1500 ppm values)
+	* (optional) set item for humidity, co2, voc and/or home/presence sensor/item
 
 ## Usage
 1. Add the widget 'widget_fan' to your dashboard or page. Remember it's intended for tiled dashboards (so small)
@@ -151,26 +175,38 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* Set the item for the humidity sensor (it expects 0-100% values).
 4. If you have an CO2 sensor (optional)
 	* Set the item for the CO2 sensor (it expects 400-1500 ppm values).
-5. You're done
+5. If you have an VOC sensor (optional)
+	* Set the item for the VOC sensor (it expects 0-10 ppm values ).
+6. If you have an presence/home item (optional)
+	* Set the item in the rule!
+7. You're done
 	* Press L, M or H button to change speed to low, medium or high setting
 	* Press hourglass to temporally increase speed (accoding to high setting and timer1)
 	* Press wrench to set another speed (slider will show)
 	* Icons will change according to settings, remember. The fan will respond immediatelly, the GUI with a 30 second delay (according to thing update frequency)
-6. If you installed the fan rule, you can change automation settings at the start of the script
+8. If you installed the fan rule, you can change automation settings at the start of the script
 	* scriptName : scriptname is used in logging
 	* group : Used to find fan items
-	* nightSpeed : Nightspeed, integer value or low/medium/high
-	* daySpeed : Dayspeed, integer value or low/medium/high
+	* nightSpeed : night speed, integer value
+	* morningSpeed : morningspeed, integer value
+	* afternoonSpeed : afternoon speed, integer value
+	* eveningSpeed : evening speed, integer value
+	* morningStart : hour morning mode starts (>=)
+	* afternoonStart : hour afternoon mode starts (>=)
+	* eveningStart : hour evening mode starts (>=)
+	* nightStart : hour night mode starts (>=)
+	* resetMinutes : minutes, when passed manual command can reset to default day/night settings (-1 disable)
+	* correctionMinutes : minimum time for corrections on CO2 adjustments
+	* correctionTreshold : when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
+9. If you have an humidity sensor these are the addional settings at the start of the script
+	* humidityItem : When empty it will search for the default name, if you want you can give the name of your item
 	* humidSpeed : Speed for ventilation when humid or low/medium/high or timer1/timer2/timer3
-	* dayStart : Hour day mode starts (>=)
-	* nightStart : Hour night mode starts (>=)
-	* resetMinutes : Minutes manual command can reset to default day/night settings (-1 disable)
 	* humidityTreshold : %humidity rise to start
 	* delayFanStart : Minutes to start fan AFTER humidity raises over treshold
 	* delayFanEnd : Minutes to keep fan turning after humidity fan start (ignored when speed set to timer1/timer2/timer3)
 	* delayFanNextStart : Minutes wait for next start
-	* humidityItem : When empty it will search for the default name, if you want you can give the name of your item
-7. If you have an CO2 sensor these are the addional settings at the start of the script
+10. If you have an CO2 sensor these are the addional settings at the start of the script
+	* co2Item : name for item (""=default, CO2, ending with _CO2 or containing CO2)
 	* co2LowPpm : start point ppm. Above this value fan will increase speed
 	* co2LowSpeed : start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
 	* co2HighPpm : end point ppm. Above this value fan will no longer increase speed anymore
@@ -178,12 +214,21 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* correctionMinutes : minimum time for corrections on CO2 adjustments
 	* correctionTreshold :  when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
 	* co2Item : When empty it will search for the default name, if you want you can give the name of your item
-
+11. If you have an VOC sensor these are the addional settings at the start of the script
+	* vocItem : name for item (""=default, VOC, ending with _VOC or containing VOC)
+	* vocLowPpm : start point ppm. Above this value fan will increase speed
+	* vocLowSpeed : start point speed (1=100% of day/night speed)
+	* vocHighPpm : end point ppm. Above this value fan will no longer increase speed anymore
+	* vocHighSpeed : end point speed (1.1=110% of day/night speed). This is also the maximum for VOC ventilation
+12. If you have an presence/home item these are the addional settings at the start of the script
+	* presenceItem : name for optional presence item (usually a group item with one member for each person)
+	* presenceInverted : if it's an "away" item. So OFF means someone is home.
+	* awaySpeed : away speed (optional, if you have a presence item)
 ## Versions
 * 0.9 Initial version
 * 1.0 First release (added humidity graph, auto setting rule and layout improvements)
 * 1.1 Second release (added humidity indicator, remaining time for timers)
-* 1.2 Work in progress: CO2 sensor
+* 1.2 Work in progress: CO2/VOC sensor
 	
 ## Code
 The code is pretty standard. Things you might find interesting for changes

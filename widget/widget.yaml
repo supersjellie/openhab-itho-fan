@@ -24,6 +24,13 @@ props:
       required: false
       type: TEXT
     - context: item
+      default: ""
+      description: VOC
+      label: VOC
+      name: voc
+      required: false
+      type: TEXT
+    - context: item
       default: _current_speed
       description: Item with speed
       label: Fan speed
@@ -87,7 +94,7 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Mar 28, 2023, 8:22:35 PM
+timestamp: Apr 1, 2023, 1:18:48 PM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
@@ -186,13 +193,12 @@ slots:
         visible: = items[props.fan+props.speed].state>230
     - component: oh-button
       config:
-        iconF7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'tornado': 'wind' "
+        iconF7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sunrise_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==3 ? 'sunset_fill' : (items[props.fan+props.mode].state% 10)==5 ? 'zzz' : (items[props.fan+props.mode].state% 10)==6 ? 'tornado': (items[props.fan+props.mode].state% 10)==7 ? 'wind' : 'hurricane' "
         iconColor: "=(items[props.fan+props.mode].state>=10 && items[props.fan+props.command].state=='X') || items[props.fan+props.command].state=='reset' ? 'green' : 'gray'"
         iconSize: 25px
         action: command
         actionCommand: reset
         actionItem: = props.fan+props.command
-        
         style:
           left: 122px
           position: absolute
@@ -203,7 +209,7 @@ slots:
           - display-flex
           - justify-content-flex-center
           - align-items-center
-        iconColor: "= !props.humidity ? 'gray' : items[props.humidity].state<40 || items[props.humidity].state>60 ? 'gray' : 'green'"
+        iconColor: "= !props.humidity ? 'gray' : items[props.humidity].state>=80 ||  items[props.humidity].state<=20 ? 'red' : items[props.humidity].state<=40 || items[props.humidity].state>=60 ? 'yellow' : 'green'"
         iconF7: drop_fill
         iconSize: 25px
         popoverOpen: ='.humidityPopover'
@@ -218,7 +224,8 @@ slots:
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
-          color: "#4cd964"
+          comment: "button vs label green=#4cd964, red=#ff3b30, yellow=ffcc00"
+          color: "= !props.humidity ? 'gray' : items[props.humidity].state>=80 ||  items[props.humidity].state<=20 ? 'ff3b30' : items[props.humidity].state<=40 || items[props.humidity].state>=60 ? '#ffcc00' : '#4cd964'"
           font-size: 9px
           height: 20px
           left: 24px!important
@@ -251,7 +258,7 @@ slots:
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
-          color: "#4cd964"
+          color: "= props.co2=='' ? 'gray' : items[props.co2].state.split(' ')[0]<1000 ? '#4cd964' : items[props.co2].state.split(' ')[0]<1400 ? '#ffcc00' : '#ff3b30'  "
           font-size: 9px
           height: 20px
           left: 24px!important
@@ -264,6 +271,42 @@ slots:
           word-break: break-word
         atext: =items[props.co2].state.split(' ')[0]/200
         text: "='▪'.repeat(props.co2=='' ? 0 : items[props.co2].state<400 ? 0 : items[props.co2].state.split(' ')[0]>1400 ? 5 :  Math.round( (items[props.co2].state.split(' ')[0]-400)/200)  )"
+        visible: =(props.co2!='')
+    - component: oh-button
+      config:
+        class:
+          - display-flex
+          - justify-content-flex-center
+          - align-items-center
+        iconColor: "= props.voc=='' ? 'gray' : items[props.voc].state<2 ? 'green' : items[props.voc].state<10 ? 'yellow' : 'red'  "
+        iconF7: burst_fill
+        iconMaterial1: Blender
+        icon: material:Blender
+        iconSize: 17px
+        style:
+          left: 130px
+          position: absolute
+          top: 85px
+          width: 25px
+        visible: =(props.voc!='')
+    - component: Label
+      config:
+        style:
+          --f7-card-bg-color: rgba(0,0,0,0.0)
+          --f7-card-box-shadow: none
+          color: "= props.voc=='' ? 'gray' : items[props.voc].state<2 ? '#4cd964' : items[props.voc].state<10 ? '#ffcc00' : '#ff3b30'  "
+          font-size: 9px
+          height: 20px
+          left: 128px!important
+          line-height: 4px
+          position: absolute!important
+          text-align: center
+          top: 90px!important
+          transform: rotate(180deg)
+          width: 5px
+          word-break: break-word
+        atext: =items[props.voc].state.split(' ')[0]/200
+        text: "='▪'.repeat(props.voc=='' ? 0  : items[props.voc].state>=10 ? 5 :  Math.round(items[props.voc].state/2)  )"
         visible: =(props.co2!='')
     - component: Label
       config:
@@ -309,8 +352,8 @@ slots:
           .my_button {
             height: 22px !important;
             min-height: 22px !important;
-            width: 26px !important;
-            min-width: 26px !important;
+            width: 27px !important;
+            min-width: 27px !important;
             padding: 0px 0px 0px 0px;
             margin: 0px 0px 0px 0px;
             inset: 0px 0px 0px 0px;
@@ -444,8 +487,8 @@ slots:
                     actionItem: = props.fan+props.command
                     class:
                       - my_button
-                    color: "= (items[props.fan+props.mode].state % 10)==2 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? 'green' : 'gray'"
-                    fill: "=  (items[props.fan+props.mode].state % 10)==2 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? true : false"
+                    color: "= (items[props.fan+props.mode].state % 10)==6 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.fan+props.mode].state % 10)==6 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? true : false"
                     iconF7: hourglass
                     iconSize: 20px
                     outline: true

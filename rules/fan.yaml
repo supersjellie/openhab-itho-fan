@@ -32,7 +32,17 @@ actions:
 
         (1.1) easier debug messages/ improved null check for items with NULL value (instead of null)
 
-        (1.2) added CO2 regulation, removed setting as low/medium/high. Only numbers (needed for checks/compares)
+        (1.2) added (optional) CO2 regulation, removed setting as low/medium/high. Only numbers (needed for checks/compares)
+
+        (1.2) split day in morning, evening, afternoon and night
+
+        (1.2) added (optional) VOC regulation
+
+        (1.2) changed mode item (check constants below for values)
+
+        (1.2) added (optional) home/away regulation
+
+        (1.2) changed humidity to optional
 
         */
 
@@ -44,15 +54,60 @@ actions:
         var group=scriptName;//default scriptname also used to find fan items
 
 
-        //day/night
+        //morning/afternoon/evening/night
 
-        var nightSpeed=20;//nightspeed, integer value
+        var nightSpeed=20;//night speed, integer value
 
-        var daySpeed=80;//dayspeed, integer value
+        var morningSpeed=60;//morningspeed, integer value
 
-        var dayStart=7;// hour day mode starts (>=)
+        var afternoonSpeed=80;//afternoon speed, integer value
+
+        var eveningSpeed=80;//evening speed, integer value
+
+        var awaySpeed=40;//away speed (optional, if you have a presence item)
+
+        var minSpeed=20;//min speed for fan. Whatever the calculated value is, never drop below (to keep fan running)
+
+        var maxSpeed=254;//max speed for fan. Whatever the calculated value is, never pass it
+
+
+        var morningStart=7;// hour morning mode starts (>=)
+
+        var afternoonStart=12;// hour afternoon mode starts (>=)
+
+        var eveningStart=18;//hour evening mode starts (>=)
 
         var nightStart=23;//hour night mode starts (>=)
+
+
+        //const seems to error when reusing script by OH
+
+        var MODE_NIGHT=0;//10=active
+
+        var MODE_MORNING=1;//11=active
+
+        var MODE_AFTERNOON=2;//12=active
+
+        var MODE_EVENING=3;//13=active
+
+        //>=5 'special modes'
+
+        var MODE_AWAY=5;//15=active
+
+        var MODE_HUMIDITY=6;//16=active
+
+        var MODE_CO2=7;//17=active
+
+        var MODE_VOC=8;//18=active
+
+        //<10 inactive mode (f.i. overridden by button press), >=10 active mode (set speed is active) 
+
+
+        //someone home item
+
+        var presenceItem="";//name for optional presence item (usually a group item with one member for each person)
+
+        var presenceInverted=false;//if it's an "away" item. So OFF means someone is home.
 
 
         //humidity
@@ -76,11 +131,24 @@ actions:
 
         var co2LowPpm=900;//start point ppm. Above this value fan will increase speed
 
-        var co2LowSpeed=80;//start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
+        var co2LowSpeed=eveningSpeed;//start point speed. This might not be the minimum for CO2 ventialtion. It will go down to day/nighspeed.
 
         var co2HighPpm=1200;//end point ppm. Above this value fan will no longer increase speed anymore
 
         var co2HighSpeed=160;//end point speed. This is also the maximum for CO2 ventilation
+
+
+        //voc (using BME680 with bosch library, this seems to have strange peaks maybe due to recalibration. That's why the "safe" 10% extra to do some testing)
+
+        var vocItem="";//name for item (""=default, VOC, ending with _VOC or containing VOC)
+
+        var vocLowPpm=1;//start point ppm. Above this value fan will increase speed
+
+        var vocLowSpeed=1;//start point speed (1=100% of day/night speed)
+
+        var vocHighPpm=10;//end point ppm. Above this value fan will no longer increase speed anymore
+
+        var vocHighSpeed=1.1;//end point speed (1.1=110% of day/night speed). This is also the maximum for VOC ventilation
 
 
         //auto reset
@@ -129,7 +197,7 @@ actions:
         var fanTime=searchFirstItem(group,"timer_time");
 
 
-        //optional, can be null!
+        //CO2 optional, can be null!
 
         var co2=null;
 
@@ -142,6 +210,37 @@ actions:
         if (co2!=null){
           debug("co2, using "+co2.name);
         }
+
+
+        //VOC optional, can be null!
+
+        var voc=null;
+
+        if (vocItem==""){
+          voc=searchBestItem(null,"VOC");
+        } else {
+          voc=searchBestItem(null,vocItem);
+        }
+
+        if (voc!=null){
+          debug("voc, using "+voc.name);
+        }
+
+
+        //presense optional, can be null!
+
+        var presence=null;
+
+        if (presenceItem==""){
+          presence=searchBestItem(null,"home");
+        } else {
+          presence=searchBestItem(null,presenceItem);
+        }
+
+        if (presence!=null){
+          debug("presence, using "+presence.name);
+        }
+
 
 
         //create in mem vars (script object is cached in openHAB). Will be erased on script save/change
@@ -345,16 +444,28 @@ actions:
           
           //day or night?
           var day=true;
-          if (nightStart<dayStart && hour>=nightStart && hour<dayStart){
-            //example 1-7
+          var dayPeriod=MODE_EVENING;
+          if (nightStart<morningStart && hour>=nightStart && hour<morningStart){
+            //example 1-7, night
             day=false;
-          } else if (nightStart>dayStart && (hour>=nightStart || hour<dayStart)){
-            //example 23-7
+            dayPeriod=MODE_NIGHT;
+          } else if (nightStart>morningStart && (hour>=nightStart || hour<morningStart)){
+            //example 23-7, night
             day=false;
+            dayPeriod=MODE_NIGHT;
+          }else if (hour>=morningStart && hour<afternoonStart){
+            //morning
+            dayPeriod=MODE_MORNING;
+          }else if (hour>=afternoonStart && hour<eveningStart){
+            //afternoon
+            dayPeriod=MODE_AFTERNOON;
+          }else if (hour>=eveningStart){
+            //evening
+            dayPeriod=MODE_EVENING;
           }
-
+          
           //init auto speedchange
-          let mode=null;
+          let mode=dayPeriod;
           let baseSpeed=null;
           let speed=null;
           let command=null;
@@ -364,15 +475,37 @@ actions:
           let checkSpeed=null;
           
           //baseline day/night
-          if (day){
-            baseSpeed=daySpeed;
-            mode=1;
-          }else{
-            baseSpeed=nightSpeed;
-            mode=0;
+          switch(dayPeriod){
+            case MODE_MORNING:
+              baseSpeed=morningSpeed;
+              debug("morningmode "+baseSpeed);
+              break;
+            case MODE_AFTERNOON:
+              baseSpeed=afternoonSpeed;
+              debug("afternoonmode "+baseSpeed);
+              break;
+            case MODE_EVENING:
+              baseSpeed=eveningSpeed;
+              debug("eveningmode "+baseSpeed);
+              break;
+            case MODE_NIGHT:
+            default:
+              baseSpeed=nightSpeed;
+              debug("nightmode "+baseSpeed);
+              break;
           }
           
+          //home?
+          var home=true;
+          if (day && presence!=null && ((!presenceInverted && presence.state=='OFF') || (presenceInverted && presence.state=='ON'))){
+            //day, presence item and not home
+            debug("not home");
+            mode=MODE_AWAY;
+            baseSpeed=awaySpeed;
+            home=false;
+          }
 
+          
           //calc co2-speed
           var co2Speed=0;//default=off
           if (co2!=null){
@@ -381,7 +514,7 @@ actions:
             
             if (co2Value>=co2HighPpm){
               //max co2 correction
-              co2Speed=co2HighPpm;
+              co2Speed=co2HighSpeed;
             } else {
               //increasing correction, calc lineair between low & high
               co2Speed=parseInt(co2LowSpeed+(co2HighSpeed-co2LowSpeed)*(co2Value-co2LowPpm)/(co2HighPpm-co2LowPpm));
@@ -393,6 +526,35 @@ actions:
             debug("co2 "+co2Value+" co2speed "+co2Speed);
           }
           
+          //calc VOC speed
+          var vocSpeed=0;//default=off
+          if (voc!=null){
+            //voc sensor found
+            
+            //correct relative value
+            vocLowSpeed*=baseSpeed;
+            vocHighSpeed*=baseSpeed;
+            
+            
+            let vocValue=parseInt(voc.state);
+            if (vocValue>=vocHighPpm){
+              //max co2 correction
+              vocSpeed=vocHighSpeed;
+            } else {
+              //increasing correction, calc lineair between low & high
+              vocSpeed=parseInt(vocLowSpeed+(vocHighSpeed-vocLowSpeed)*(vocValue-vocLowPpm)/(vocHighPpm-vocLowPpm));
+            }
+            if (vocSpeed<baseSpeed){
+              //disable
+              vocSpeed=0;
+            }
+            debug("voc "+vocValue+" vocspeed "+vocSpeed);
+
+           
+          }
+          
+          
+          //in sequence of priority: reset, not home, humidity, co2/voc (whatever is largest correction) and last day/night
           if (resetTrigger){
             //forced reset on day/night setting
             changeAllowed=true;
@@ -400,18 +562,25 @@ actions:
             
             //set wait time for auto rule (so it will keep this value until timeout)
             lastUpdate=now;
+          } else if (!home){
+            //when not home, ignore all humidity, co2, voc triggers (that should not occur)
+            speed=baseSpeed;
           }else if (humididyFanOn && humidSpeed>co2Speed && humidSpeed>baseSpeed){
             //humidity and speed is larger than currentspeed
             speed=humidSpeed;
-            mode=2;
+            mode=MODE_HUMIDITY;
           } else if (humidityRunning){
             //don't set (allow manual intervention), only check
             checkSpeed=humidSpeed;
-            mode=2;
-          } else if (co2Speed> baseSpeed){
-            //co2 correction and larger than currentspeed
+            mode=MODE_HUMIDITY;
+          } else if (co2Speed> baseSpeed && co2Speed>=vocSpeed){
+            //co2 correction and larger than day/night/voc
             speed=co2Speed;
-            mode=3;
+            mode=MODE_CO2;
+          } else if (vocSpeed> baseSpeed && vocSpeed>co2Speed){
+            //voc correction and larger than day/night/co2
+            speed=vocSpeed;
+            mode=MODE_VOC;
           } else {
             //use baseline
             speed=baseSpeed;
@@ -421,16 +590,19 @@ actions:
             checkSpeed=speed;
           }
           //safety
-          if (speed<20){
+          if (speed<minSpeed){
             //never turn fan off
-            speed=20;
+            speed=minSpeed;
+          }else if (speed>=maxSpeed){
+            //absolute fan max
+            speed=maxSpeed;
           }
 
-          debug("day="+day+" speed="+speed+" mode="+mode+" "+"change "+changeAllowed+" correction "+correctionAllowed + " sp="+ parseInt(currentSpeed)+" mode="+mode+" humid="+humidFanStart);
+          debug("home="+home+" day="+day+" speed="+speed+" mode="+mode+" "+"change "+changeAllowed+" correction "+correctionAllowed + " sp="+ parseInt(currentSpeed)+" mode="+mode+" humid="+humidFanStart);
 
           //only update items if values are calculated and changed (else rule will trigger itself creating loops)
           ruleSpeed="";
-          if (!changeAllowed && correctionAllowed && currentSpeed!=speed && mode==3 && (Math.abs(currentSpeed-speed)<correctionTreshold || speed>currentSpeed)){
+          if (!changeAllowed && correctionAllowed && currentSpeed!=speed && (mode==MODE_CO2 || mode==MODE_VOC) && (Math.abs(currentSpeed-speed)<correctionTreshold || speed>currentSpeed)){
             //change not allowed, but correction is!
             fanSpeed.sendCommand(speed);
             currentSpeed=speed;//it will/should become this
