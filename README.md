@@ -12,10 +12,11 @@ Arjen Hiemstra created and sells an addon for an itho CVE fan. This makes it con
 left to right, nightmode, daymode, manual set and auto humidity mode.
 
 ![example 5](images-wiki/example7.png?raw=true)
+![example 8](images-wiki/example8.png?raw=true)
 ![example 6](images-wiki/example5.png?raw=true)
 ![example 7](images-wiki/example6.png?raw=true)
 
-left to right, co2 venting active, 24 hours humidity graph and free manual setting
+left to right, co2 venting active, voc centing active, 24 hours humidity graph and free manual setting
 
 Features
 1. Depending on the speed the fan will show 1 of 7 images. 
