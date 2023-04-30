@@ -102,6 +102,7 @@ Using the [issues](https://github.com/Supersjellie/openhab-itho-fan/issues) in g
 3. Buy and install the Itho CVE RFT WiFi add-on, see [documentation](https://github.com/arjenhiemstra/ithowifi)
 	* To use all features, also buy/install the 866 mhz radio controller and humidity sensor
 	* If you own it, add your remote(s) to the addon (not the itho box).
+	* My installation (including pictures) can be found at [my home automation page](https://www.netsjel.nl/ventilator-1.html). Use google to translate it to english.
 4. When installing the above you can choose a host name (WiFi settings), remember it. The manual assumes 'fan'
 5. Install in openhab the http binding, see [documentation](https://www.openhab.org/addons/bindings/http/)
 6. Install in openhab the jsonpath transformation, see [documentation](https://www.openhab.org/addons/transformations/jsonpath/)
@@ -198,7 +199,8 @@ Optional, if you want no automatic change to ventilation settings you can skip t
 	* nightStart : hour night mode starts (>=)
 	* resetMinutes : minutes, when passed manual command can reset to default day/night settings (-1 disable)
 	* correctionMinutes : minimum time for corrections on CO2 adjustments
-	* correctionTreshold : when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
+	* smoothing : smooth corrections (true=on)
+	* smoothingTime : number>0, datapoints to average. Since the rule runs once minute, 15=15 minutes. 
 9. If you have an humidity sensor these are the addional settings at the start of the script
 	* humidityItem : When empty it will search for the default name, if you want you can give the name of your item
 	* humidSpeed : Speed for ventilation when humid or low/medium/high or timer1/timer2/timer3

@@ -94,7 +94,7 @@ props:
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Apr 1, 2023, 1:18:48 PM
+timestamp: Apr 27, 2023, 11:19:32 AM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
@@ -193,12 +193,12 @@ slots:
         visible: = items[props.fan+props.speed].state>230
     - component: oh-button
       config:
-        iconF7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sunrise_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==3 ? 'sunset_fill' : (items[props.fan+props.mode].state% 10)==5 ? 'zzz' : (items[props.fan+props.mode].state% 10)==6 ? 'tornado': (items[props.fan+props.mode].state% 10)==7 ? 'wind' : 'hurricane' "
-        iconColor: "=(items[props.fan+props.mode].state>=10 && items[props.fan+props.command].state=='X') || items[props.fan+props.command].state=='reset' ? 'green' : 'gray'"
-        iconSize: 25px
         action: command
         actionCommand: reset
         actionItem: = props.fan+props.command
+        iconColor: "=(items[props.fan+props.mode].state>=10 && items[props.fan+props.command].state=='X') || items[props.fan+props.command].state=='reset' ? 'green' : 'gray'"
+        iconF7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sunrise_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==3 ? 'sunset_fill' : (items[props.fan+props.mode].state% 10)==5 ? 'zzz' : (items[props.fan+props.mode].state% 10)==6 ? 'tornado': (items[props.fan+props.mode].state% 10)==7 ? 'wind' : 'hurricane' "
+        iconSize: 25px
         style:
           left: 122px
           position: absolute
@@ -213,26 +213,26 @@ slots:
         iconF7: drop_fill
         iconSize: 25px
         popoverOpen: ='.humidityPopover'
-        visible: "= (props.humidity==undefined) ? false : true"
         style:
           left: 3px
           position: absolute
           top: 2px
           width: 25px
+        visible: "= (props.humidity==undefined) ? false : true"
     - component: Label
       config:
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
-          comment: "button vs label green=#4cd964, red=#ff3b30, yellow=ffcc00"
           color: "= !props.humidity ? 'gray' : items[props.humidity].state>=80 ||  items[props.humidity].state<=20 ? 'ff3b30' : items[props.humidity].state<=40 || items[props.humidity].state>=60 ? '#ffcc00' : '#4cd964'"
+          comment: button vs label green=#4cd964, red=#ff3b30, yellow=ffcc00
           font-size: 9px
           height: 20px
-          left: 24px!important
+          left: "=(device.desktop ? 24: 28)+'px!important'"
           line-height: 4px
           position: absolute!important
           text-align: center
-          top: 6px!important
+          top: "=(device.desktop ? 6: 10)+'px!important'"
           transform: rotate(180deg)
           width: 5px
           word-break: break-word
@@ -255,21 +255,21 @@ slots:
         visible: =(props.co2!='')
     - component: Label
       config:
+        atext: =items[props.co2].state.split(' ')[0]/200
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
           color: "= props.co2=='' ? 'gray' : items[props.co2].state.split(' ')[0]<1000 ? '#4cd964' : items[props.co2].state.split(' ')[0]<1400 ? '#ffcc00' : '#ff3b30'  "
           font-size: 9px
           height: 20px
-          left: 24px!important
+          left: "=(device.desktop ? 24: 28)+'px!important'"
           line-height: 4px
           position: absolute!important
           text-align: center
-          top: 90px!important
+          top: "=(device.desktop ? 90: 94)+'px!important'"
           transform: rotate(180deg)
           width: 5px
           word-break: break-word
-        atext: =items[props.co2].state.split(' ')[0]/200
         text: "='▪'.repeat(props.co2=='' ? 0 : items[props.co2].state<400 ? 0 : items[props.co2].state.split(' ')[0]>1400 ? 5 :  Math.round( (items[props.co2].state.split(' ')[0]-400)/200)  )"
         visible: =(props.co2!='')
     - component: oh-button
@@ -278,10 +278,10 @@ slots:
           - display-flex
           - justify-content-flex-center
           - align-items-center
-        iconColor: "= props.voc=='' ? 'gray' : items[props.voc].state<2 ? 'green' : items[props.voc].state<10 ? 'yellow' : 'red'  "
+        icon: material:Blender
+        iconColor: "= props.voc=='' ? 'gray' : items[props.voc].state<4 ? 'green' : items[props.voc].state<20 ? 'yellow' : 'red'  "
         iconF7: burst_fill
         iconMaterial1: Blender
-        icon: material:Blender
         iconSize: 17px
         style:
           left: 130px
@@ -291,34 +291,34 @@ slots:
         visible: =(props.voc!='')
     - component: Label
       config:
+        atext: =items[props.voc].state.split(' ')[0]/200
         style:
           --f7-card-bg-color: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
-          color: "= props.voc=='' ? 'gray' : items[props.voc].state<2 ? '#4cd964' : items[props.voc].state<10 ? '#ffcc00' : '#ff3b30'  "
+          color: "= props.voc=='' ? 'gray' : items[props.voc].state<4 ? '#4cd964' : items[props.voc].state<20 ? '#ffcc00' : '#ff3b30'  "
           font-size: 9px
           height: 20px
-          left: 128px!important
+          left: "=(device.desktop ? 128: 132)+'px!important'"
           line-height: 4px
           position: absolute!important
           text-align: center
-          top: 90px!important
+          top: "=(device.desktop ? 90: 94)+'px!important'"
           transform: rotate(180deg)
           width: 5px
           word-break: break-word
-        atext: =items[props.voc].state.split(' ')[0]/200
-        text: "='▪'.repeat(props.voc=='' ? 0  : items[props.voc].state>=10 ? 5 :  Math.round(items[props.voc].state/2)  )"
-        visible: =(props.co2!='')
+        text: "='▪'.repeat(props.voc=='' ? 0  : items[props.voc].state>=20 ? 5 :  Math.round(items[props.voc].state/4)  )"
+        visible: =(props.voc!='')
     - component: Label
       config:
         style:
-          --f7-card-bg-color: rgba(0,0,0,0.0)
+          --f7-card-bg-color1: rgba(0,0,0,0.0)
           --f7-card-box-shadow: none
           color: black
           font-size: 20px
-          left: 50px
+          left: "=(device.desktop ? 50: 51)+'px!important'"
           position: absolute
           text-align: center
-          top: 43px
+          top: "=(device.desktop ? 44: 45)+'px!important'"
           width: 54px
         text: = Number.parseFloat((items[props.fan+props.speed].state)/25.4).toFixed(0)
     - component: f7-gauge

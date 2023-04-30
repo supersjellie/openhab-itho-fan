@@ -8,6 +8,10 @@ triggers:
     configuration:
       itemName: fan_current_speed
     type: core.ItemStateChangeTrigger
+  - id: "4"
+    configuration:
+      itemName: fan_command
+    type: core.ItemStateChangeTrigger
 conditions: []
 actions:
   - inputs: {}
@@ -107,7 +111,7 @@ actions:
 
         var presenceItem="";//name for optional presence item (usually a group item with one member for each person)
 
-        var presenceInverted=false;//if it's an "away" item. So OFF means someone is home.
+        var presenceInverted=false;//true if it's an "away" item. So OFF means someone is home.
 
 
         //humidity
@@ -138,7 +142,7 @@ actions:
         var co2HighSpeed=160;//end point speed. This is also the maximum for CO2 ventilation
 
 
-        //voc (using BME680 with bosch library, this seems to have strange peaks maybe due to recalibration. That's why the "safe" 10% extra to do some testing)
+        //voc (using BME680 with bosch library, this seems to have strange peaks maybe due to recalibration. That's why the "safe" 20% extra to do some testing)
 
         var vocItem="";//name for item (""=default, VOC, ending with _VOC or containing VOC)
 
@@ -146,18 +150,23 @@ actions:
 
         var vocLowSpeed=1;//start point speed (1=100% of day/night speed)
 
-        var vocHighPpm=10;//end point ppm. Above this value fan will no longer increase speed anymore
+        var vocHighPpm=20;//end point ppm. Above this value fan will no longer increase speed anymore
 
-        var vocHighSpeed=1.1;//end point speed (1.1=110% of day/night speed). This is also the maximum for VOC ventilation
+        var vocHighSpeed=1.2;//end point speed (1.1=110% of day/night speed). This is also the maximum for VOC ventilation
 
 
         //auto reset
 
         var resetMinutes=30;//minutes, when passed manual command can reset to default day/night settings (-1 disable)
 
-        var correctionMinutes=5;//minimum time for corrections on CO2 adjustments
+        var correctionMinutes=5;//minimum time for corrections on VOC/CO2 adjustments
 
-        var correctionTreshold=10;// when new calculated and actual value are within this range, it will be set within the steeringTime. If not the resetMinutes apply!
+
+        //smoothing (especially for CO2 correntions)
+
+        var smoothing=true;//Smooting, true=on.
+
+        var smoothingTime=15;//Number>0, datapoints to average. Since the rule runs once minute, 15=15 minutes. 
 
 
         //init
@@ -243,6 +252,18 @@ actions:
 
 
 
+        //condition is larger, substract 1 to include equal
+
+        if (resetMinutes>=1){
+          resetMinutes--;
+        }
+
+        if (correctionMinutes>=1){
+          correctionMinutes--;
+        }
+
+
+
         //create in mem vars (script object is cached in openHAB). Will be erased on script save/change
 
         if (isNaN(this.ruleChange)){
@@ -265,8 +286,17 @@ actions:
           //no timer active
           this.timerRun=0;
           
+          //reset smoothing
+          this.smoothingData=[];
+          this.smoothingIndex=-1;
+          
+          //set first run (to init cron)
+          this.ruleInit=true;
+          
           //first run rule, erase button for openhab (itho addon won't respond)
           fanCommand.sendCommand('X');
+
+         
         }
 
 
@@ -276,11 +306,35 @@ actions:
 
         var resetTrigger=false;
 
+        var commandTrigger=false;
+
+        if (valueTrigger && this.event.itemName==fanCommand.name){
+          commandTrigger=true;
+        }
 
 
-        //always reset command if not X (displays buttons in widget right)
+        /*
 
-        if (isAvailable(fanCommand.state) && fanCommand.state!='X'){
+        what we want for remote/button presses
+
+        1) command change event from X -> Medium (or whatever) : Only set lastUpdate to temp disable rule steering. The widget needs the command for displaying correct button status
+
+        2) command will change fanSpeed so triggers fanspeed change event: Now we reset command from medium->X and active status of day/night (because speed is now medium value)
+
+        3) command change event from Medium -> X: all is done, just because step 2 set it back to X
+
+        Since we now are sure of manual changes the old bandwidth for steering (correctionTreshold) is obsolete. The lastUpdate is always right.
+
+        */
+
+
+
+        debug("value="+valueTrigger+ " command="+commandTrigger+" event "+this.event+" commandStr="+fanCommand.state+" reset "+resetTrigger+" rule="+ruleChange+" ruleSpd="+ruleSpeed);
+
+
+        //reset command if not X (displays buttons in widget right) except if trigger=commandbutton (reset it only if speed changes)
+
+        if (!commandTrigger && isAvailable(fanCommand.state) && fanCommand.state!='X'){
           //it is a button
           debug("Reset command to X");
           
@@ -295,28 +349,43 @@ actions:
         }
 
 
-        debug("valueTrigger="+valueTrigger+" event "+this.event+" command="+fanCommand.state+" resetTrigger "+resetTrigger);
-
-
 
         //check for 'unexpected' change of fanspeed
 
-        if (valueTrigger && ruleSpeed!="" && Number.isInteger(ruleSpeed) && fanSpeed.state!=ruleSpeed){
-          //we got a last set value (previous run), but current speed is different. i.e. something else than rule changed it (too)
-          debug("ruleChange reset "+fanSpeed.state+"!="+ruleSpeed);
-          ruleChange=false;
+        if (!commandTrigger && valueTrigger && ruleSpeed!="" && Number.isInteger(ruleSpeed)){
+          
+          if (Math.abs(fanSpeed.state-ruleSpeed)>1 && ruleChange){
+            //we got a last set value (previous run), but current speed is different. i.e. something else than rule changed it (too)
+            debug("ruleChange reset "+fanSpeed.state+"!="+ruleSpeed);
+            ruleChange=false;
+          } else if (Math.abs(fanSpeed.state-ruleSpeed)<=1 && !ruleChange){
+            //small change, but ruleChange not set
+            debug("ruleChange set "+fanSpeed.state+"!="+ruleSpeed);
+            ruleChange=true;    
+          }
         }
 
 
         //why is script running?
 
-        if (valueTrigger && ruleChange){
+        if (commandTrigger){
+
+          //triggered on command
+          debug("trigger=external, command");
+
+          //Allow it by setting lastUpdate (this block corrections by rules for a period)
+          lastUpdate=now;
+
+          //no more processing (to show widget indicators right wait for speedchange event)
+
+         
+        }else if (valueTrigger && ruleChange){
           //value changed by rule itself. Reset and ignore
           debug("trigger=rule");
           ruleChange=false;
         }else if (valueTrigger && !resetTrigger){
           //triggered by external factor, press on remote, dashboard, fan GUI. 
-          debug("trigger=external");
+          debug("trigger=external, fanspeed change");
           
           if (isAvailable(fanMode.state) && fanMode.state>=10){
             //make active mode inactive (except if it's the reset->X)
@@ -410,21 +479,20 @@ actions:
             }
                 
           } else if (humidFanStart<=-1000-delayFanNextStart && humidityOverTreshold){ 
-            //rise in humidity over treshold
+            //rise in humidity over treshold, set start delay timer
             humidFanStart=delayFanStart
           } else if (humidFanStart<=-1000){
             //off (and keep off)
           }else if (humidFanStart==0){
             //start delay finished, start fan
             humidFanStart--;
-            humididyFanOn=true;
-            humidityRunning=true;
+            humididyFanOn=true; // it will only be true this moment/interval/at start
+            humidityRunning=true; // it will be true while running
             changeAllowed=true;//always start!
             debug("humidity fan start");
           } else if (humidFanStart>-1000 && humidFanStart<=-delayFanEnd){
             //end delay finished, end fan
             humidFanStart=-1000;
-            humididyFanOn=false;
             if (timerMode){
               //timer (by itho addon) determines end. Prevent auto set 
               lastUpdate=now;
@@ -586,9 +654,41 @@ actions:
             speed=baseSpeed;
           }
           
-          if (checkSpeed==null){
-            checkSpeed=speed;
+           
+          //smoothing
+          if (smoothing && smoothingIndex<0){
+            //init it with day/night speed
+            smoothingIndex=0;
+            for (let r=0;r<smoothingTime;r++){
+              smoothingData[r]=baseSpeed;
+            }
           }
+
+          //smooth speed (ignore when responding to humidity)  
+          if (smoothing && mode!=MODE_HUMIDITY){
+            
+            //add datapoint
+            smoothingData[smoothingIndex]=speed;
+            smoothingIndex++;
+            smoothingIndex = smoothingIndex % smoothingTime;
+            
+            
+            
+            //get average
+            let averageSpeed=0;
+            for (let r=0;r<smoothingTime;r++){
+              averageSpeed+=smoothingData[r];
+            }
+            averageSpeed/=smoothingTime;
+            
+            debug("smoothing speed="+speed+" newAverage="+averageSpeed+" index="+smoothingIndex);
+                speed=averageSpeed;
+            
+          }  
+          
+          //whole numbers
+          speed=Math.round(speed);
+          
           //safety
           if (speed<minSpeed){
             //never turn fan off
@@ -596,48 +696,76 @@ actions:
           }else if (speed>=maxSpeed){
             //absolute fan max
             speed=maxSpeed;
-          }
+          }  
 
           debug("home="+home+" day="+day+" speed="+speed+" mode="+mode+" "+"change "+changeAllowed+" correction "+correctionAllowed + " sp="+ parseInt(currentSpeed)+" mode="+mode+" humid="+humidFanStart);
 
           //only update items if values are calculated and changed (else rule will trigger itself creating loops)
           ruleSpeed="";
-          if (!changeAllowed && correctionAllowed && currentSpeed!=speed && (mode==MODE_CO2 || mode==MODE_VOC) && (Math.abs(currentSpeed-speed)<correctionTreshold || speed>currentSpeed)){
-            //change not allowed, but correction is!
+          
+          if (changeAllowed && correctionAllowed && currentSpeed!=speed && (mode==MODE_CO2 || mode==MODE_VOC)){
+            //CO2/VOC correction allowed
             fanSpeed.sendCommand(speed);
-            currentSpeed=speed;//it will/should become this
-            ruleSpeed=speed;
             ruleChange=true;
             lastCorrection=now;
-            console.info("Writing speed "+speed+" (CO2 correction)");    
-          }else if (!changeAllowed && (currentSpeed!=speed || command!=null)){
+            if (mode==MODE_CO2){
+              console.info("Writing speed "+speed+" (CO2 correction)");
+            } else {
+              console.info("Writing speed "+speed+" (VO2 correction)");
+            }
+          } else if (changeAllowed && !correctionAllowed && currentSpeed==speed && (mode==MODE_CO2 || mode==MODE_VOC)){
+            //CO2-VOC corrections NOT  allowed but speed is ok. No logging
+          } else if (mode==MODE_CO2 || mode==MODE_VOC){
+            //corrections NOT allowed
+            if (mode==MODE_CO2){
+              debug("no CO2 correction allowed");
+            } else {
+              debug("no VOC correction allowed");
+            }
+            if (changeAllowed){
+              //changes are allowed, so it's on track. Force active mode
+              currentSpeed=speed;
+            }
+          } else if (!changeAllowed && (currentSpeed!=speed || command!=null)){
             //at the moment automatic changes are not allowed (and change is requested), log
             debug("no changes allowed");    
           } else if (!changeAllowed){
-            //at the moment automatic changes are not allowed
+            //at the moment automatic changes are not allowed (same speed, no logging)
           }else if (speed!=null && speed!=parseInt(fanSpeed.state)){
             fanSpeed.sendCommand(speed);
-            currentSpeed=speed;//it will/should become this
-            ruleSpeed=speed;
             ruleChange=true;
-            lastUpdate=now;
+            //lastUpdate=now; => only block after manual input?
             lastCorrection=now;
             console.info("Writing speed "+speed);
+          }else if (speed!=null && ruleInit){
+            ruleChange=true;
+            //lastUpdate=now;
+            debug("Init rule speed "+speed);  
           } else if (command!=null){
             //at the moment no commands will be generared, keep it for future changes?
             fanCommand.sendCommand(command);
-            ruleSpeed=command;
             ruleChange=true;
-            lastUpdate=now;
+            //lastUpdate=now;
             lastCorrection=now;
             console.info("writing command "+command);
           }
           
+          //cron init done
+          ruleInit=false;
+          ruleSpeed=speed;//all change-events other than calculated speed are manual interventions/user input
           
           //mode active/applied?
-          if (mode!=null && Math.abs(checkSpeed-currentSpeed)<correctionTreshold){
+          if (mode!=null && (changeAllowed|| ruleChange)){
+            //whatever rule did, it's planned so active mode
+            mode+=10;
+          } else if (mode!=null && checkSpeed!=null && checkSpeed==currentSpeed){
+            //checkspeed supplied and same, active mode
+            mode+=10;
+          } else if (mode!=null  && speed!=null && checkSpeed==speed){
+            //default on speed
             mode+=10;
           }
+          
 
           //mode changed, write
           if (mode!=null && mode!=parseInt(fanMode.state)){
@@ -691,6 +819,7 @@ actions:
             fanRemainTime.postUpdate(0);
 
           }
+
 
 
           
