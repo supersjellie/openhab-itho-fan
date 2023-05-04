@@ -106,7 +106,7 @@ Using the [issues](https://github.com/Supersjellie/openhab-itho-fan/issues) in g
 4. When installing the above you can choose a host name (WiFi settings), remember it. The manual assumes 'fan'
 5. Install in openhab the http binding, see [documentation](https://www.openhab.org/addons/bindings/http/)
 6. Install in openhab the jsonpath transformation, see [documentation](https://www.openhab.org/addons/transformations/jsonpath/)
-7. Install in openHAB the javascript scriping engine, see [documentation](http://hal9000:8080/settings/addons/automation-jsscripting)
+7. Install in openHAB the javascript scriping engine, see [documentation](https://www.openhab.org/addons/automation/jsscripting/)
 	* This installs the new ECMAscript 2021+ version with OH libraries that somewhere in the future will replace the old (now default) js-script. If you would like to stick to the default build-in version you'll have to change the rules a bit	
 
 ## Create thing
@@ -263,3 +263,9 @@ The code is pretty standard. Things you might find interesting for changes
 13. The rule also helps the GUI by resetting the command item. If it's 'low' it means low has been sent to addon (and applied) but the result had not been read by openHAB (max 30 secs delay). When applied it will be 'X'
 14. It seems not all components in the widget respond the same to optional items. Sometimes a (prop.xxx), (prop.xxx=='') or (prop.xxx==undefined) get the right result
 15. Do them all, if an optional prop is somewhere in de widget not converted the internal code will crash making it's behaviour (update) unreliable.	
+16. The trick for optional properties in the widget.
+	* Have a (standard) group item property with no default
+	* Have a detail item property with a default value with the postfix like '_itemname'
+	* Use in the widget formulas like 'items[props.group+props.detail].state'
+	* If you select a group item 'yyy' it will add up to 'yyy_itemname'. So with only setting the group all the details items will be set
+	* if you leave the group empty and select a item like 'qqq_itemname' it will add up to 'qqq_itemname'. So just as you selected ignoring the group.
