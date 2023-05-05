@@ -4,7 +4,7 @@ tags:
 props:
   parameters:
     - context: item
-      default: ""
+      defaultValue: ""
       description: Fan group
       label: Fan group
       name: fan
@@ -17,77 +17,77 @@ props:
       required: false
       type: TEXT
     - context: item
-      default: ""
+      defaultValue: ""
       description: CO2
       label: CO2
       name: co2
       required: false
       type: TEXT
     - context: item
-      default: ""
+      defaultValue: ""
       description: VOC
       label: VOC
       name: voc
       required: false
       type: TEXT
     - context: item
-      default: _current_speed
+      defaultValue: _current_speed
       description: Item with speed
       label: Fan speed
       name: speed
       required: false
       type: TEXT
     - context: item
-      default: _timer_time
+      defaultValue: _timer_time
       description: Item with timer
       label: timer
       name: timer
       required: false
       type: TEXT
     - context: item
-      default: _command
+      defaultValue: _command
       description: Item to send commands
       label: item command
       name: command
       required: false
       type: TEXT
     - context: item
-      default: _mode
+      defaultValue: _mode
       description: Item with auto mode (by rule)
       label: item mode
       name: mode
       required: false
       type: TEXT
     - context: item
-      default: _timer_maxtime
+      defaultValue: _timer_maxtime
       description: Item with max time (incr. fan speed)
       label: item maxtime
       name: maxtime
       required: false
       type: TEXT
     - context: item
-      default: _timer_remaintime
+      defaultValue: _timer_remaintime
       description: Item with remain time (incr. fanspeed)
       label: item remaintime
       name: remaintime
       required: false
       type: TEXT
     - context: number
-      default: "25"
+      defaultValue: "25"
       description: low setting
       label: low setting
       name: low
       required: true
       type: TEXT
     - context: number
-      default: "80"
+      defaultValue: "80"
       description: medium setting
       label: medium setting
       name: medium
       required: true
       type: TEXT
     - context: number
-      default: "160"
+      defaultValue: "160"
       description: high setting
       label: high setting
       name: high
@@ -99,7 +99,7 @@ component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
 slots:
-  default:
+  defaultValue:
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -366,7 +366,7 @@ slots:
         visible: true
         width: auto
       slots:
-        default:
+        defaultValue:
           - component: f7-col
             config:
               class:
@@ -380,7 +380,7 @@ slots:
                 margin-top: 0px
                 width: auto
             slots:
-              default:
+              defaultValue:
                 - component: oh-button
                   config:
                     action: command
@@ -405,7 +405,7 @@ slots:
                 margin-right: 1px
                 width: auto
             slots:
-              default:
+              defaultValue:
                 - component: oh-button
                   config:
                     action: command
@@ -430,7 +430,7 @@ slots:
                 margin-right: 1px
                 width: auto
             slots:
-              default:
+              defaultValue:
                 - component: oh-button
                   config:
                     action: command
@@ -455,7 +455,7 @@ slots:
                 margin-right: 1px
                 width: auto
             slots:
-              default:
+              defaultValue:
                 - component: oh-button
                   config:
                     class:
@@ -479,7 +479,7 @@ slots:
                 margin-right: 1px
                 width: auto
             slots:
-              default:
+              defaultValue:
                 - component: oh-button
                   config:
                     action: command
@@ -498,7 +498,7 @@ slots:
       config:
         class: ='speedPopover'
       slots:
-        default:
+        defaultValue:
           - component: oh-slider-card
             config:
               item: =props.fan+props.speed
@@ -533,7 +533,7 @@ slots:
         style:
           --f7-popover-bg-color: rgb(50,50,25)
       slots:
-        default:
+        defaultValue:
           - component: oh-chart
             config:
               height: 150px
