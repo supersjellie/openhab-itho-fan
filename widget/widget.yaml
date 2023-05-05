@@ -4,7 +4,6 @@ tags:
 props:
   parameters:
     - context: item
-      default: ""
       description: Fan group
       label: Fan group
       name: fan
@@ -17,84 +16,73 @@ props:
       required: false
       type: TEXT
     - context: item
-      default: ""
       description: CO2
       label: CO2
       name: co2
       required: false
       type: TEXT
     - context: item
-      default: ""
       description: VOC
       label: VOC
       name: voc
       required: false
       type: TEXT
     - context: item
-      default: _current_speed
       description: Item with speed
       label: Fan speed
       name: speed
       required: false
       type: TEXT
     - context: item
-      default: _timer_time
       description: Item with timer
       label: timer
       name: timer
       required: false
       type: TEXT
     - context: item
-      default: _command
       description: Item to send commands
       label: item command
       name: command
       required: false
       type: TEXT
     - context: item
-      default: _mode
       description: Item with auto mode (by rule)
       label: item mode
       name: mode
       required: false
       type: TEXT
     - context: item
-      default: _timer_maxtime
       description: Item with max time (incr. fan speed)
       label: item maxtime
       name: maxtime
       required: false
       type: TEXT
     - context: item
-      default: _timer_remaintime
       description: Item with remain time (incr. fanspeed)
       label: item remaintime
       name: remaintime
       required: false
       type: TEXT
     - context: number
-      default: "25"
       description: low setting
       label: low setting
       name: low
       required: true
       type: TEXT
     - context: number
-      default: "80"
       description: medium setting
       label: medium setting
       name: medium
       required: true
       type: TEXT
     - context: number
-      default: "160"
       description: high setting
       label: high setting
       name: high
       required: true
       type: TEXT
   parameterGroups: []
-timestamp: Apr 27, 2023, 11:19:32 AM
+timestamp: May 5, 2023, 5:06:53 PM
 component: f7-card
 config:
   key: = 'fan' + items.timertick_hour.state
@@ -112,7 +100,7 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: = items[props.fan+props.speed].state<=30
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state<=30"
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -125,7 +113,7 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: =items[props.fan+props.speed].state>30 && items[props.fan+props.speed].state<=70
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state>30 && items[props.speed==null ? props.fan+'_current_speed' : props.speed].state<=70"
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -138,7 +126,7 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: =items[props.fan+props.speed].state>70 && items[props.fan+props.speed].state<=110
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state>70 && items[props.speed==null ? props.fan+'_current_speed' : props.speed].state<=110"
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -151,7 +139,7 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: =items[props.fan+props.speed].state>110 && items[props.fan+props.speed].state<=150
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state>110 && items[props.speed==null ? props.fan+'_current_speed' : props.speed].state<=150"
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -164,7 +152,7 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: = items[props.fan+props.speed].state>150 && items[props.fan+props.speed].state<=190
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state>150 && items[props.speed==null ? props.fan+'_current_speed' : props.speed].state<=190"
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -177,7 +165,7 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: = items[props.fan+props.speed].state>190 && items[props.fan+props.speed].state<=230
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state>190 && items[props.speed==null ? props.fan+'_current_speed' : props.speed].state<=230"
     - component: f7-badge
       config:
         bgColor: rgba(0,0,0,0.0)
@@ -190,14 +178,14 @@ slots:
           position: absolute
           top: 4px
           width: 105px
-        visible: = items[props.fan+props.speed].state>230
+        visible: "= items[props.speed==null ? props.fan+'_current_speed' : props.speed].state>230"
     - component: oh-button
       config:
         action: command
         actionCommand: reset
-        actionItem: = props.fan+props.command
-        iconColor: "=(items[props.fan+props.mode].state>=10 && items[props.fan+props.command].state=='X') || items[props.fan+props.command].state=='reset' ? 'green' : 'gray'"
-        iconF7: "= (items[props.fan+props.mode].state % 10)==0 ? 'moon_fill' : (items[props.fan+props.mode].state% 10)==1 ? 'sunrise_fill' : (items[props.fan+props.mode].state% 10)==2 ? 'sun_max_fill' : (items[props.fan+props.mode].state% 10)==3 ? 'sunset_fill' : (items[props.fan+props.mode].state% 10)==5 ? 'zzz' : (items[props.fan+props.mode].state% 10)==6 ? 'tornado': (items[props.fan+props.mode].state% 10)==7 ? 'wind' : 'hurricane' "
+        actionItem: "= props.command==null ? props.fan+'_command' : props.command"
+        iconColor: "=(items[props.mode==null ? props.fan+'_mode' : props.mode].state>=10 && items[props.command==null ? props.fan+'_command' : props.command].state=='X') || items[props.command==null ? props.fan+'_command' : props.command].state=='reset' ? 'green' : 'gray'"
+        iconF7: "= (items[props.mode==null ? props.fan+'_mode' : props.mode].state % 10)==0 ? 'moon_fill' : (items[props.mode==null ? props.fan+'_mode' : props.mode].state% 10)==1 ? 'sunrise_fill' : (items[props.mode==null ? props.fan+'_mode' : props.mode].state% 10)==2 ? 'sun_max_fill' : (items[props.mode==null ? props.fan+'_mode' : props.mode].state% 10)==3 ? 'sunset_fill' : (items[props.mode==null ? props.fan+'_mode' : props.mode].state% 10)==5 ? 'zzz' : (items[props.mode==null ? props.fan+'_mode' : props.mode].state% 10)==6 ? 'tornado': (items[props.mode==null ? props.fan+'_mode' : props.mode].state% 10)==7 ? 'wind' : 'hurricane' "
         iconSize: 25px
         style:
           left: 122px
@@ -218,7 +206,7 @@ slots:
           position: absolute
           top: 2px
           width: 25px
-        visible: "= (props.humidity==undefined) ? false : true"
+        visible: !(props.humidity==null)
     - component: Label
       config:
         style:
@@ -252,7 +240,7 @@ slots:
           position: absolute
           top: 85px
           width: 25px
-        visible: =(props.co2!='')
+        visible: =!(props.co2==null)
     - component: Label
       config:
         atext: =items[props.co2].state.split(' ')[0]/200
@@ -288,7 +276,7 @@ slots:
           position: absolute
           top: 85px
           width: 25px
-        visible: =(props.voc!='')
+        visible: =!(props.voc==null)
     - component: Label
       config:
         atext: =items[props.voc].state.split(' ')[0]/200
@@ -320,7 +308,7 @@ slots:
           text-align: center
           top: "=(device.desktop ? 44: 45)+'px!important'"
           width: 54px
-        text: = Number.parseFloat((items[props.fan+props.speed].state)/25.4).toFixed(0)
+        text: "= Number.parseFloat((items[props.speed==null ? props.fan+'_current_speed' : props.speed].state)/25.4).toFixed(0)"
     - component: f7-gauge
       config:
         borderBgColor: transparant
@@ -331,7 +319,7 @@ slots:
           left: 60px
           position: absolute
           top: 42px
-        value: "= items[props.fan+props.maxtime].state==0 ? 0 : 1.0*(items[props.fan+props.remaintime].state)/items[props.fan+props.maxtime].state"
+        value: "= items[props.maxtime==null ? props.fan+'_timer_maxtime' : props.maxtime].state==0 ? 0 : 1.0*(items[props.remaintime==null ? props.fan+'_timer_remaintime' : props.remaintime].state)/items[props.maxtime==null ? props.fan+'_timer_maxtime' : props.maxtime].state"
     - component: f7-row
       config:
         class:
@@ -385,11 +373,11 @@ slots:
                   config:
                     action: command
                     actionCommand: low
-                    actionItem: = props.fan+props.command
+                    actionItem: "= props.command==null ? props.fan+'_command' : props.command"
                     class:
                       - my_button
-                    color: "= (items[props.fan+props.command].state=='low' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5)) ? 'green' : 'gray'"
-                    fill: "=  (items[props.fan+props.command].state=='low' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)<=5)) ? true : false"
+                    color: "= (items[props.command==null ? props.fan+'_command' : props.command].state=='low' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X' && items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.low==null ? 25 : props.low))<=5)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.command==null ? props.fan+'_command' : props.command].state=='low' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X' && items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.low==null ? 25 : props.low))<=5)) ? true : false"
                     outline: true"
                     round: false
                     small: true
@@ -410,11 +398,11 @@ slots:
                   config:
                     action: command
                     actionCommand: medium
-                    actionItem: = props.fan+props.command
+                    actionItem: "= props.command==null ? props.fan+'_command' : props.command"
                     class:
                       - my_button
-                    color: "= (items[props.fan+props.command].state=='medium' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5)) ? 'green' : 'gray'"
-                    fill: "= (items[props.fan+props.command].state=='medium' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.medium)<=5)) ? true : false"
+                    color: "= (items[props.command==null ? props.fan+'_command' : props.command].state=='medium' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X' && items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.medium==null ? 80 : props.medium))<=5)) ? 'green' : 'gray'"
+                    fill: "= (items[props.command==null ? props.fan+'_command' : props.command].state=='medium' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X' && items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.medium==null ? 80 : props.medium))<=5)) ? true : false"
                     outline: true
                     round: false
                     small: true
@@ -435,11 +423,11 @@ slots:
                   config:
                     action: command
                     actionCommand: high
-                    actionItem: = props.fan+props.command
+                    actionItem: "= props.command==null ? props.fan+'_command' : props.command"
                     class:
                       - my_button
-                    color: "= (items[props.fan+props.command].state=='high' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5)) ? 'green' : 'gray'"
-                    fill: "=  (items[props.fan+props.command].state=='high' || (items[props.fan+props.command].state=='X' && items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.high)<=5)) ? true : false"
+                    color: "= (items[props.command==null ? props.fan+'_command' : props.command].state=='high' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X' && items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.high==null ? 160 : props.high))<=5)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.command==null ? props.fan+'_command' : props.command].state=='high' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X' && items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.high==null ? 160 : props.high))<=5)) ? true : false"
                     outline: true
                     round: false
                     small: true
@@ -460,8 +448,8 @@ slots:
                   config:
                     class:
                       - my_button
-                    color: "= items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? 'green' : 'gray'"
-                    fill: "= items[props.fan+props.mode].state<10 && items[props.fan+props.timer].state<=0 && Math.abs(items[props.fan+props.speed].state-props.low)>5 && Math.abs(items[props.fan+props.speed].state-props.medium)>5 && Math.abs(items[props.fan+props.speed].state-props.high)>5 ? true : false"
+                    color: "= items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.low==null ? 25 : props.low))>5 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.medium==null ? 80 : props.medium))>5 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.high==null ? 160 : props.high))>5 ? 'green' : 'gray'"
+                    fill: "= items[props.mode==null ? props.fan+'_mode' : props.mode].state<10 && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state<=0 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.low==null ? 25 : props.low))>5 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.medium==null ? 80 : props.medium))>5 && Math.abs(items[props.speed==null ? props.fan+'_current_speed' : props.speed].state-(props.high==null ? 160 : props.high))>5 ? true : false"
                     iconF7: wrench
                     iconSize: 16px
                     outline: true
@@ -484,11 +472,11 @@ slots:
                   config:
                     action: command
                     actionCommand: timer1
-                    actionItem: = props.fan+props.command
+                    actionItem: "= props.command==null ? props.fan+'_command' : props.command"
                     class:
                       - my_button
-                    color: "= (items[props.fan+props.mode].state % 10)==6 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? 'green' : 'gray'"
-                    fill: "=  (items[props.fan+props.mode].state % 10)==6 || (items[props.fan+props.command].state=='timer1' || (items[props.fan+props.command].state=='X'  && items[props.fan+props.timer].state>0)) ? true : false"
+                    color: "= (items[props.mode==null ? props.fan+'_mode' : props.mode].state % 10)==6 || (items[props.command==null ? props.fan+'_command' : props.command].state=='timer1' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X'  && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state>0)) ? 'green' : 'gray'"
+                    fill: "=  (items[props.mode==null ? props.fan+'_mode' : props.mode].state % 10)==6 || (items[props.command==null ? props.fan+'_command' : props.command].state=='timer1' || (items[props.command==null ? props.fan+'_command' : props.command].state=='X'  && items[props.timer==null ? props.fan+'_timer_time' : props.timer].state>0)) ? true : false"
                     iconF7: hourglass
                     iconSize: 20px
                     outline: true
@@ -501,7 +489,7 @@ slots:
         default:
           - component: oh-slider-card
             config:
-              item: =props.fan+props.speed
+              item: "= props.speed==null ? props.fan+'_current_speed' : props.speed"
               label: true
               max: 250
               min: 20
@@ -523,7 +511,7 @@ slots:
                 border-radius: var(--f7-card-expandable-border-radius)
                 box-shadow: var(--f7-card-expandable-box-shadow)
                 width: auto
-              title: = 'Fan Speed ('+items[props.fan+props.speed].state+')'
+              title: "= 'Fan Speed ('+items[props.speed==null ? props.fan+'_current_speed' : props.speed].state+')'"
               unit: ""
               vertical: true
               visible: true
