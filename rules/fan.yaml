@@ -21,7 +21,7 @@ actions:
       script: >-
         /*
 
-        Fan script version 1.2
+        Fan script version 1.21
 
 
         (1.0) Creates (if needed) a mode item under group fan (naming according to script name)
@@ -48,6 +48,8 @@ actions:
 
         (1.2) changed humidity to optional
 
+        (1.21) fix for OH 4.0/4.01 change of Event functionality
+
         */
 
 
@@ -68,7 +70,7 @@ actions:
 
         var eveningSpeed=80;//evening speed, integer value
 
-        var awaySpeed=40;//away speed (optional, if you have a presence item)
+        var awaySpeed=morningSpeed;//away speed (optional, if you have a presence item)
 
         var minSpeed=20;//min speed for fan. Whatever the calculated value is, never drop below (to keep fan running)
 
@@ -109,7 +111,7 @@ actions:
 
         //someone home item
 
-        var presenceItem="";//name for optional presence item (usually a group item with one member for each person)
+        var presenceItem="Thuis";//name for optional presence item (usually a group item with one member for each person)
 
         var presenceInverted=false;//true if it's an "away" item. So OFF means someone is home.
 
@@ -173,7 +175,7 @@ actions:
 
         //init
 
-        var debugMode=true;//log debug as info (easier than changing loglevel in karaf)
+        var debugMode=false;//log debug as info (easier than changing loglevel in karaf)
 
         console.info(scriptName+"script started");
 
@@ -300,13 +302,23 @@ actions:
           //first run rule, erase button for openhab (itho addon won't respond)
           fanCommand.sendCommand('X');
 
+
          
         }
+
 
 
         //triggered by cron, currentspeed item or command?
 
         var valueTrigger=isAvailable(this.event);
+
+        if (valueTrigger && isAvailable(this.event.type)){
+          if (this.event.type=="TimerEvent" || this.event.type=="ExecutionEvent"){
+            //openHAB 4, event is always given). Ignore these two
+            valueTrigger=false;
+          }
+        }
+
 
         var commandTrigger=false;
 
@@ -330,7 +342,6 @@ actions:
         Since we now are sure of manual changes the old bandwidth for steering (correctionTreshold) is obsolete. The lastUpdate is always right.
 
         */
-
 
 
         debug("value="+valueTrigger+ " command="+commandTrigger+" event "+this.event+" commandStr="+fanCommand.state+" reset "+resetTrigger+" rule="+ruleChange+" ruleSpd="+ruleSpeed);
@@ -387,6 +398,7 @@ actions:
           }
 
           //no more processing (to show widget indicators right wait for speedchange event)
+
 
          
         }else if (valueTrigger && ruleChange){
